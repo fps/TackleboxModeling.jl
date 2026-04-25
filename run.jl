@@ -78,7 +78,7 @@ opt = Flux.setup(Flux.Adam(1e-3), m)
 n_epochs = 10000
 
 # function stft(x); [ sum(x .* exp.(-im * 2 * Float32(pi) * f .* (1:size(x, 1)))) for f in Float32.((0:size(x, 1))./size(x,1)) ]; end
-function stft_basis(n); exp.(-im * 2 * Float32(pi) .* (1:n) .* (0:(n - 1))' ./ n); end
+function stft_basis(n); exp.(-im * 2 * Float32(pi) .* (1:div(n,2)) .* (0:(n - 1))' ./ n); end
 fft_size = 2^8
 
 basis = stft_basis(fft_size) |> dev
