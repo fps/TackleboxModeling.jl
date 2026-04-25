@@ -52,11 +52,11 @@ UnicodePlots.lineplot(y[:], width=:auto, title="Output") |> display
 
 y = dev(y)[:,:,:]
 
-f = DSP.digitalfilter(DSP.Highpass(1050/fs_x), DSP.FIRWindow(DSP.Windows.hamming(2^9+1)))
+f = DSP.digitalfilter(DSP.Highpass(350/fs_x), DSP.FIRWindow(DSP.Windows.hamming(2^9+1)))
 
 x = DSP.filt(f, x)
 
-gains = permutedims([2^k for k in 4:6][:,:,:], (2, 1, 3)) |> dev
+gains = permutedims([2^k for k in 3:5][:,:,:], (2, 1, 3)) |> dev
 
 x = dev(x)[:,:,:]
 
@@ -85,6 +85,18 @@ window = DSP.Windows.hamming(fft_size) |> dev
 
 function stft(x); basis * (x .* window); end
 
+function spectrogram(x, n, advance=div(n,1))
+    N = size(x, 1)
+    n_chunks = div(N - n, advance)
+    out = zeros(Float32, n, n_chunks) |> dev
+
+    for k in 1:n_chunks
+        out = cat([abs.(stft(x[(1+(k-1)*advance):((k-1)*advance+n)])) ./ (n_chunks * sqrt(n)) for k in 1:n_chunks ]..., dims=2)
+    end
+
+    out[1:div(size(out, 1), 2), :]
+end
+
 function spectrum(x, n, advance=div(n,2))
     N = size(x, 1)
     n_chunks = div(N - n, advance)
@@ -94,14 +106,7 @@ function spectrum(x, n, advance=div(n,2))
         out = out + abs.(stft(x[(1+(k-1)*advance):((k-1)*advance+n)])) ./ (n_chunks * sqrt(n))
     end
 
-    #=
-    k = 1; out = abs.(FFTW.fft(x[(1+(k-1)*advance):((k-1)*advance+n),:,:], 1)) ./ (n_chunks * n)
-    =#
-
     out[1:div(size(out, 1), 2)]
-
-    # Statistics.mean(cat([abs.(FFTW.fft(x[(1+(k-1)*advance):(1+(k-1)*advance+n),:,:])[1:(div(n,2)), :, :]) for k in 1:n_chunks]..., dims=2), dims=2)
-    # out
 end
 
 
@@ -118,6 +123,9 @@ for epoch in 1:n_epochs
 
         fy_hat = spectrum(y_hat[:], fft_size) 
         fy2 = spectrum(y2[:], fft_size) 
+
+        fy_hat = spectrogram(y_hat[:], fft_size) 
+        fy2 = spectrogram(y2[:], fft_size) 
 
         Flux.mse(fy_hat, fy2)
         # Flux.mse(y_hat, y2)
