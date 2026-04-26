@@ -1,4 +1,4 @@
-ENV["JULIA_CUDA_HARD_MEMORY_LIMIT"] = "6GiB"
+ENV["JULIA_CUDA_HARD_MEMORY_LIMIT"] = "8GiB"
 
 @info "Activating package..."
 
@@ -35,7 +35,7 @@ x ./= x_std
 
 UnicodePlots.lineplot(x[:], width=:auto, title="Input") |> display
 
-y, fs_y = WAV.wavread("data/nam_example/output.wav")
+y, fs_y = WAV.wavread("data/BrianMay/output_BrianMay.wav")
 y = y[1:size(x,1)]
 
 y_mean = Statistics.mean(y)
@@ -54,11 +54,11 @@ gains = permutedims([2^k for k in 3:5][:,:,:], (2, 1, 3)) |> dev
 n_gains = length(gains)
 
 m = Flux.Chain(
-    Flux.Conv((2^6,), 1 => 1),
+    Flux.Conv((2^7,), 1 => 1),
     x -> repeat(x, 1, n_gains, 1),
     x -> tanh.(gains .* x),
     Flux.Conv((1,), n_gains => 1),
-    Flux.Conv((2^7,), 1 => 1)) |> dev
+    Flux.Conv((2^8,), 1 => 1)) |> dev
 
 m_offset = AmpModeling.offset(m)
 
@@ -110,10 +110,10 @@ for epoch in 1:n_epochs
     loss, grad = Flux.withgradient(m) do m
         y_hat = m(chunked_x)[:,1,:]
 
-        fy_hat = abs.(basis * circshift(y_hat, (shift1, 0))) 
-        fy = abs.(basis * circshift(chunked_y[:,1,:], (shift1, 0))) 
+        fy_hat = abs.(basis * circshift(y_hat, (shift1, 0)))
+        fy = abs.(basis * circshift(chunked_y[:,1,:], (shift1, 0)))
 
-        Flux.mse(fy_hat, fy)
+        Flux.mse(fy_hat, fy) + 1f0 * Statistics.mean(y_hat)^2
     end
 
     global m_prev = deepcopy(m)
