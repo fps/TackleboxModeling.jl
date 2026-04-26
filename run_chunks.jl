@@ -129,7 +129,7 @@ for epoch in 1:n_epochs
       @info "loss_min: $loss_min"
       loss_min = loss
       global m_min = deepcopy(m)
-      WAV.wavwrite(m(dev(x[:,:,:]))[:] .* y_std |> cpu, "model_output.wav"; Fs=fs_x)
+      # WAV.wavwrite(m(dev(x[:,:,:]))[:] .* y_std |> cpu, "model_output.wav"; Fs=fs_x)
     end
 
     push!(train_losses, loss)
