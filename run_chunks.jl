@@ -36,6 +36,8 @@ x_std = Statistics.std(x)
 x .-= x_mean
 x ./= x_std
 
+# x = x[1:div(size(x, 1), 4)]
+
 plt(x, "Input") |> display
 
 y, fs_y = WAV.wavread("data/BrianMay/output.wav")
@@ -52,7 +54,7 @@ plt(y, "Output") |> display
 
 AmpModeling.offset(x::Function) = 0
 
-gains = permutedims([2^k for k in 5:5][:,:,:], (2, 1, 3)) |> dev
+gains = permutedims([2^k for k in 3:5][:,:,:], (2, 1, 3)) |> dev
 
 n_gains = length(gains)
 
@@ -95,16 +97,18 @@ chunked_y = chunked_y[:,:,:] |> dev
 function stft_basis(n); exp.(-im * 2 * Float32(pi) .* (1:div(n,2)) .* (0:(n - 1))' ./ n); end
 
 basis = stft_basis(fft_size) |> dev
-window = DSP.Windows.hamming(fft_size) |> dev
+window = DSP.Windows.hann(fft_size) |> dev
 window ./= sum(window)
 
 function stft(x); basis * (x .* window); end
 
-opt = Flux.setup(Flux.Adam(1e-3), m)
+opt = Flux.setup(Flux.Adam(1e-2), m)
 
 n_epochs = 5000
 
 loss_min = 1f10
+
+batchsize = 128
 
 train_losses = []
 for epoch in 1:n_epochs
@@ -114,17 +118,35 @@ for epoch in 1:n_epochs
     shift1 = Random.rand(1:fft_size)    
     shift2 = Random.rand(1:fft_size)   
 
-    loss, grad = Flux.withgradient(m) do m
-        y_hat = m(chunked_x)[:,1,:]
-
-        # fy_hat = abs.(basis * (window .* circshift(y_hat, (shift1, 0))))
-        # fy = abs.(basis * (window .* circshift(chunked_y[:,1,:], (shift1, 0))))
-
-        fy_hat = abs.(basis * (window .* y_hat))
-        fy = abs.(basis * (window .* chunked_y[:,1,:]))
-
-        Flux.mse(fy_hat, fy) + 1f-2 * Statistics.mean(y_hat)^2
+    losses = []
+    for (x,y) in Flux.MLUtils.DataLoader((chunked_x, chunked_y), batchsize=2^12, shuffle=true)
+        # print(".")
+        loss, grad = Flux.withgradient(m) do m
+            y_hat = m(x)[:,1,:]
+    
+            fy_hat = abs.(basis * (window .* circshift(y_hat, (shift1, 0))))
+            fy = abs.(basis * (window .* circshift(y[:,1,:], (shift1, 0)))) 
+    
+            # fy_hat = abs.(basis * (window .* y_hat))
+            # fy = abs.(basis * (window .* chunked_y[:,1,:]))
+    
+            # fy_hat = abs.(basis * y_hat) ./ fft_size
+            # fy = abs.(basis * y[:,1,:]) ./ fft_size
+    
+            #=
+            fym = Statistics.mean(fy)
+    
+            fy = fy ./ fym
+            fy_hat = fy_hat ./ fym
+            =#
+    
+            Flux.mse(fy_hat, fy) + 1f-2 * Statistics.mean(y_hat)^2
+        end
+        Flux.update!(opt, m, grad[1])
+        push!(losses, loss)
     end
+
+    loss = Statistics.mean(losses)
 
     global m_prev = deepcopy(m)
 
@@ -143,6 +165,5 @@ for epoch in 1:n_epochs
 
     push!(train_losses, loss)
     plt(log10.(train_losses), "Training losses (log10)") |> display
-    Flux.update!(opt, m, grad[1])
 end
 
