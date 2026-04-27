@@ -23,6 +23,9 @@ dev = Flux.gpu
 cpu = Flux.cpu
 # dev = cpu
 
+plt(x) = UnicodePlots.lineplot(x[:] |> cpu, width=:auto)
+plt(x, title) = UnicodePlots.lineplot(x[:] |> cpu, width=:auto, title=title)
+
 @info "Loading data..."
 
 x, fs_x = WAV.wavread("data/nam_example/input.wav")
@@ -33,9 +36,9 @@ x_std = Statistics.std(x)
 x .-= x_mean
 x ./= x_std
 
-UnicodePlots.lineplot(x[:], width=:auto, title="Input") |> display
+plt(x, "Input") |> display
 
-y, fs_y = WAV.wavread("data/BrianMay/output_BrianMay.wav")
+y, fs_y = WAV.wavread("data/BrianMay/output.wav")
 y = y[1:size(x,1)]
 
 y_mean = Statistics.mean(y)
@@ -43,22 +46,25 @@ y_std = Statistics.std(y)
 y .-= y_mean
 y ./= y_std
 
-UnicodePlots.lineplot(y[:], width=:auto, title="Output") |> display
+plt(y, "Output") |> display
 
 @info "Setting up model..."
 
 AmpModeling.offset(x::Function) = 0
 
-gains = permutedims([2^k for k in 3:5][:,:,:], (2, 1, 3)) |> dev
+gains = permutedims([2^k for k in 5:5][:,:,:], (2, 1, 3)) |> dev
 
 n_gains = length(gains)
 
 m = Flux.Chain(
+    # Flux.Conv((2^7,), 1 => 1, Flux.tanh),
     Flux.Conv((2^7,), 1 => 1),
     x -> repeat(x, 1, n_gains, 1),
     x -> tanh.(gains .* x),
     Flux.Conv((1,), n_gains => 1),
     Flux.Conv((2^8,), 1 => 1)) |> dev
+
+# m[1].weight .*= 32
 
 m_offset = AmpModeling.offset(m)
 
@@ -90,6 +96,7 @@ function stft_basis(n); exp.(-im * 2 * Float32(pi) .* (1:div(n,2)) .* (0:(n - 1)
 
 basis = stft_basis(fft_size) |> dev
 window = DSP.Windows.hamming(fft_size) |> dev
+window ./= sum(window)
 
 function stft(x); basis * (x .* window); end
 
@@ -110,10 +117,13 @@ for epoch in 1:n_epochs
     loss, grad = Flux.withgradient(m) do m
         y_hat = m(chunked_x)[:,1,:]
 
-        fy_hat = abs.(basis * circshift(y_hat, (shift1, 0)))
-        fy = abs.(basis * circshift(chunked_y[:,1,:], (shift1, 0)))
+        # fy_hat = abs.(basis * (window .* circshift(y_hat, (shift1, 0))))
+        # fy = abs.(basis * (window .* circshift(chunked_y[:,1,:], (shift1, 0))))
 
-        Flux.mse(fy_hat, fy) + 1f0 * Statistics.mean(y_hat)^2
+        fy_hat = abs.(basis * (window .* y_hat))
+        fy = abs.(basis * (window .* chunked_y[:,1,:]))
+
+        Flux.mse(fy_hat, fy) + 1f-2 * Statistics.mean(y_hat)^2
     end
 
     global m_prev = deepcopy(m)
@@ -124,7 +134,6 @@ for epoch in 1:n_epochs
         break
     end
 
-
     if loss < loss_min
       @info "loss_min: $loss_min"
       loss_min = loss
@@ -133,7 +142,7 @@ for epoch in 1:n_epochs
     end
 
     push!(train_losses, loss)
-    UnicodePlots.lineplot(log10.(train_losses), width=:auto, title="Training losses (log10)") |> display
+    plt(log10.(train_losses), "Training losses (log10)") |> display
     Flux.update!(opt, m, grad[1])
 end
 
