@@ -40,7 +40,10 @@ x ./= x_std
 
 plt(x, "Input") |> display
 
-y, fs_y = WAV.wavread("data/BrianMay/output.wav")
+# outpath = "data/BrianMay"
+outpath = "data/nam_example"
+
+y, fs_y = WAV.wavread("$(outpath)/output.wav")
 y = y[1:size(x,1)]
 
 y_mean = Statistics.mean(y)
@@ -60,11 +63,11 @@ n_gains = length(gains)
 
 m = Flux.Chain(
     # Flux.Conv((2^7,), 1 => 1, Flux.tanh),
-    Flux.Conv((2^7,), 1 => 1),
+    Flux.Conv((2^4,), 1 => 1),
     x -> repeat(x, 1, n_gains, 1),
     x -> tanh.(gains .* x),
     Flux.Conv((1,), n_gains => 1),
-    Flux.Conv((2^8,), 1 => 1)) |> dev
+    Flux.Conv((2^6,), 1 => 1)) |> dev
 
 # m[1].weight .*= 32
 
@@ -110,10 +113,15 @@ loss_min = 1f10
 
 batchsize = 128
 
+patience = 2^6
+
+min_epoch = 1
+
 train_losses = []
 for epoch in 1:n_epochs
     @info "Epoch: $epoch"
     global loss_min
+    global min_epoch
 
     shift1 = Random.rand(1:fft_size)    
     shift2 = Random.rand(1:fft_size)   
@@ -150,7 +158,7 @@ for epoch in 1:n_epochs
 
     global m_prev = deepcopy(m)
 
-    @info "loss: $loss, loss_min: $loss_min" #, grad: $(grad[1])"
+    @info "loss: $loss, loss_min: $loss_min, min_epoch: $(min_epoch), (epoch - min_epoch): $(epoch - min_epoch)" #, grad: $(grad[1])"
     if !isfinite(loss)
         @info "Ugh"
         break
@@ -159,11 +167,24 @@ for epoch in 1:n_epochs
     if loss < loss_min
       @info "loss_min: $loss_min"
       loss_min = loss
+      min_epoch = epoch
       global m_min = deepcopy(m)
       # WAV.wavwrite(m(dev(x[:,:,:]))[:] .* y_std |> cpu, "model_output.wav"; Fs=fs_x)
     end
 
     push!(train_losses, loss)
     plt(log10.(train_losses), "Training losses (log10)") |> display
+
+    if epoch - min_epoch > patience
+      @info "Patience exhausted: $(epoch - min_epoch)"
+      break
+    end
 end
 
+@info "Writing test file,,,"
+
+test_file_name = "Take1_Audio 1-1_short"
+test, test_fs = WAV.wavread("data/$(test_file_name).wav")
+
+test_out = m_min(dev(test ./ x_std)[:,:,:]) .* y_std
+WAV.wavwrite(cpu(test_out)[:], "$(outpath)/test_$(test_file_name).wav"; Fs=fs_x)
