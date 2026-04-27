@@ -54,7 +54,7 @@ plt(y, "Output") |> display
 
 AmpModeling.offset(x::Function) = 0
 
-gains = permutedims([2^k for k in 3:5][:,:,:], (2, 1, 3)) |> dev
+gains = permutedims([2^k for k in 0:10][:,:,:], (2, 1, 3)) |> dev
 
 n_gains = length(gains)
 
