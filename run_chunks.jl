@@ -28,7 +28,7 @@ plt(x, title) = UnicodePlots.lineplot(x[:] |> cpu, width=:auto, title=title)
 
 @info "Loading data..."
 
-x, fs_x = WAV.wavread("data/nam_example/input.wav")
+x, fs_x = WAV.wavread("data/input.wav")
 # x = x[1:(div(size(x, 1), chunksize) * chunksize)]
 
 x_mean = Statistics.mean(x)
@@ -41,7 +41,8 @@ x ./= x_std
 plt(x, "Input") |> display
 
 # outpath = "data/BrianMay"
-outpath = "data/nam_example"
+outpath = "data/marshall bluesbreaker 1962"
+# outpath = "data/nam_example"
 
 y, fs_y = WAV.wavread("$(outpath)/output.wav")
 y = y[1:size(x,1)]
@@ -67,7 +68,7 @@ m = Flux.Chain(
     x -> repeat(x, 1, n_gains, 1),
     x -> tanh.(gains .* x),
     Flux.Conv((1,), n_gains => 1),
-    Flux.Conv((2^6,), 1 => 1)) |> dev
+    Flux.Conv((2^7,), 1 => 1)) |> dev
 
 # m[1].weight .*= 32
 
@@ -132,11 +133,11 @@ for epoch in 1:n_epochs
         loss, grad = Flux.withgradient(m) do m
             y_hat = m(x)[:,1,:]
     
-            fy_hat = abs.(basis * (window .* circshift(y_hat, (shift1, 0))))
-            fy = abs.(basis * (window .* circshift(y[:,1,:], (shift1, 0)))) 
+            # fy_hat = abs.(basis * (window .* circshift(y_hat, (shift1, 0))))
+            # fy = abs.(basis * (window .* circshift(y[:,1,:], (shift1, 0)))) 
     
-            # fy_hat = abs.(basis * (window .* y_hat))
-            # fy = abs.(basis * (window .* chunked_y[:,1,:]))
+            fy_hat = abs.(basis * (window .* y_hat))
+            fy = abs.(basis * (window .* y[:,1,:]))
     
             # fy_hat = abs.(basis * y_hat) ./ fft_size
             # fy = abs.(basis * y[:,1,:]) ./ fft_size
@@ -181,10 +182,11 @@ for epoch in 1:n_epochs
     end
 end
 
-@info "Writing test file,,,"
+@info "Writing test file in $(outpath),,,"
 
 test_file_name = "Take1_Audio 1-1_short"
 test, test_fs = WAV.wavread("data/$(test_file_name).wav")
 
-test_out = m_min(dev(test ./ x_std)[:,:,:]) .* y_std
-WAV.wavwrite(cpu(test_out)[:], "$(outpath)/test_$(test_file_name).wav"; Fs=fs_x)
+test_out = m_min(dev(test ./ x_std)[:,:,:])[:] .* y_std |> cpu
+test_out = cat(zeros(Float32, m_offset), test_out, dims=1)
+WAV.wavwrite(test_out, "$(outpath)/test_$(test_file_name).wav"; Fs=fs_x)
