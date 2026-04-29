@@ -54,45 +54,77 @@ y ./= y_std
 
 plt(y, "Output") |> display
 
+test_file_name = "Take1_Audio 1-1_short"
+test, test_fs = WAV.wavread("data/$(test_file_name).wav")
+
+plt(test, "Test") |> display
+
+#=
+@info "Filtering data..."
+
+pb = 16000
+sb = 18000
+f = DSP.remez(DSP.remezord(pb/fs_x, sb/fs_x, 0.01, 0.0001), [(0, pb/fs_x) => 1, (sb/fs_x, 0.5) => 0])
+
+x = DSP.filt(f, x)
+y = DSP.filt(f, y)
+=#
+
 @info "Setting up model..."
 
 AmpModeling.offset(x::Function) = 0
 
-gains = permutedims([2^k for k in 0:10][:,:,:], (2, 1, 3)) |> dev
+gains = permutedims([2^k for k in 3:6][:,:,:], (2, 1, 3)) |> dev
 
 n_gains = length(gains)
 
+# f_decimation = DSP.remez(DSP.remezord(16000/(48000*8), 20000/(48000*8), 0.1, 0.001), [(0, 20000) => 1, (22000, 48000*8/2) => 0], Hz=(48000*8))
+
 m = Flux.Chain(
     # Flux.Conv((2^7,), 1 => 1, Flux.tanh),
-    Flux.Conv((2^4,), 1 => 1),
+    Flux.Conv((2^8,), 1 => 1),
     x -> repeat(x, 1, n_gains, 1),
+    # Flux.Upsample((2,), :bilinear),
+    # Flux.Upsample((2,), :bilinear),
+    # Flux.Upsample((2,), :bilinear),
     x -> tanh.(gains .* x),
+    # Flux.MeanPool((2,), stride=2),
+    # Flux.MeanPool((2,), stride=2),
+    # Flux.MeanPool((2,), stride=2),
     Flux.Conv((1,), n_gains => 1),
-    Flux.Conv((2^7,), 1 => 1)) |> dev
+    Flux.Conv((2^10,), 1 => 1)
+    # [Flux.Conv((16,), 1 => 1, dilation = 4^k) for k in 0:3]...
+) |> dev
 
 # m[1].weight .*= 32
 
-m_offset = AmpModeling.offset(m)
+m_offset = 48000 - size(m(dev(zeros(Float32, 48000, 1, 1))), 1)
 
-fft_size = 2^8
+@info "m_offset: $m_offset"
+
+k_max = 9
+fft_sizes = [2^k_max 2^(k_max-1) 2^(k_max-2)]
+
+@info "fft_sizes: $fft_sizes"
 
 @info "Chunking data..."
 
-chunksize = fft_size + m_offset
-overlap = div(fft_size, 2)
+chunksize_x = maximum(fft_sizes) + m_offset
+chunksize_y = maximum(fft_sizes)
+overlap = div(minimum(fft_sizes), 2)
 
 n_samples = size(x, 1)
-n_chunks = div(n_samples - chunksize, overlap)
+n_chunks = div(n_samples - chunksize_x, overlap)
 
 
 @info "n_chunks: $n_chunks"
 
-chunked_x = zeros(Float32, chunksize, 1, n_chunks)
-chunked_y = zeros(Float32, fft_size, 1, n_chunks)
+chunked_x = zeros(Float32, chunksize_x, 1, n_chunks)
+chunked_y = zeros(Float32, chunksize_y, 1, n_chunks)
 
 for n in 1:n_chunks
-  chunked_x[:, 1, n] = x[(1+(n-1)*overlap):((n-1)*overlap+chunksize)]
-  chunked_y[:, 1, n] = y[m_offset .+ ((1+(n-1)*overlap):((n-1)*overlap+fft_size))]
+  chunked_x[:, 1, n] = x[(1+(n-1)*overlap):((n-1)*overlap+chunksize_x)]
+  chunked_y[:, 1, n] = y[m_offset .+ ((1+(n-1)*overlap):((n-1)*overlap+chunksize_y))]
 end
 
 chunked_x = chunked_x[:,:,:] |> dev
@@ -100,9 +132,10 @@ chunked_y = chunked_y[:,:,:] |> dev
 
 function stft_basis(n); exp.(-im * 2 * Float32(pi) .* (1:div(n,2)) .* (0:(n - 1))' ./ n); end
 
-basis = stft_basis(fft_size) |> dev
-window = DSP.Windows.hann(fft_size) |> dev
-window ./= sum(window)
+bases = map(fft_size -> stft_basis(fft_size), fft_sizes) |> dev
+windows = map(fft_size -> DSP.Windows.hann(fft_size), fft_sizes) |> dev
+bases = map(n -> windows[n]' .* bases[n], 1:length(bases))
+# window ./= sum(window)
 
 function stft(x); basis * (x .* window); end
 
@@ -112,11 +145,25 @@ n_epochs = 5000
 
 loss_min = 1f10
 
-batchsize = 128
+batchsize = 2^12
 
 patience = 2^6
 
 min_epoch = 1
+
+function stft_loss(overlap, bases, fft_sizes, y, y_hat)
+  l = 0
+
+  n_y_hat = size(y_hat, 1)
+
+  for n in 1:length(bases)  
+    fy = abs.(bases[n] * y[1:fft_sizes[n], 1, :])
+    fy_hat = abs.(bases[n] * y_hat[1:fft_sizes[n], 1, :])
+
+    l += Flux.mse(fy, fy_hat) ./ Statistics.mean(fy.^2)
+  end
+  l
+end
 
 train_losses = []
 for epoch in 1:n_epochs
@@ -124,20 +171,17 @@ for epoch in 1:n_epochs
     global loss_min
     global min_epoch
 
-    shift1 = Random.rand(1:fft_size)    
-    shift2 = Random.rand(1:fft_size)   
-
     losses = []
-    for (x,y) in Flux.MLUtils.DataLoader((chunked_x, chunked_y), batchsize=2^12, shuffle=true)
+    for (x,y) in Flux.MLUtils.DataLoader((chunked_x, chunked_y), batchsize=batchsize, shuffle=true)
         # print(".")
         loss, grad = Flux.withgradient(m) do m
-            y_hat = m(x)[:,1,:]
+            y_hat = m(x)
     
             # fy_hat = abs.(basis * (window .* circshift(y_hat, (shift1, 0))))
             # fy = abs.(basis * (window .* circshift(y[:,1,:], (shift1, 0)))) 
     
-            fy_hat = abs.(basis * (window .* y_hat))
-            fy = abs.(basis * (window .* y[:,1,:]))
+            # fy_hat = abs.(basis * (window .* y_hat))
+            # fy = abs.(basis * (window .* y[:,1,:]))
     
             # fy_hat = abs.(basis * y_hat) ./ fft_size
             # fy = abs.(basis * y[:,1,:]) ./ fft_size
@@ -149,7 +193,8 @@ for epoch in 1:n_epochs
             fy_hat = fy_hat ./ fym
             =#
     
-            Flux.mse(fy_hat, fy) + 1f-2 * Statistics.mean(y_hat)^2
+            # Flux.mse(fy_hat, fy) ./ Statistics.mean(fy.^2) + 1f-2 * Statistics.mean(y_hat)^2
+            stft_loss(overlap, bases, fft_sizes, y, y_hat) + Statistics.mean(y_hat).^2
         end
         Flux.update!(opt, m, grad[1])
         push!(losses, loss)
@@ -183,9 +228,6 @@ for epoch in 1:n_epochs
 end
 
 @info "Writing test file in $(outpath),,,"
-
-test_file_name = "Take1_Audio 1-1_short"
-test, test_fs = WAV.wavread("data/$(test_file_name).wav")
 
 test_out = m_min(dev(test ./ x_std)[:,:,:])[:] .* y_std |> cpu
 test_out = cat(zeros(Float32, m_offset), test_out, dims=1)
