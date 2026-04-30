@@ -28,7 +28,8 @@ plt(x, title) = UnicodePlots.lineplot(x[:] |> cpu, width=:auto, title=title)
 
 @info "Loading data..."
 
-x, fs_x = WAV.wavread("data/input.wav")
+# x, fs_x = WAV.wavread("data/Take1_Audio 1-1_short.wav")
+x, fs_x = WAV.wavread("data/noise_input.wav")
 # x = x[1:(div(size(x, 1), chunksize) * chunksize)]
 
 x_mean = Statistics.mean(x)
@@ -44,7 +45,8 @@ plt(x, "Input") |> display
 outpath = "data/marshall bluesbreaker 1962"
 # outpath = "data/nam_example"
 
-y, fs_y = WAV.wavread("$(outpath)/output.wav")
+# y, fs_y = WAV.wavread("$(outpath)/nam_Take1_Audio 1-1_short.wav")
+y, fs_y = WAV.wavread("$(outpath)/noise_output.wav")
 y = y[1:size(x,1)]
 
 y_mean = Statistics.mean(y)
@@ -74,7 +76,7 @@ y = DSP.filt(f, y)
 
 AmpModeling.offset(x::Function) = 0
 
-gains = permutedims([2^k for k in 3:6][:,:,:], (2, 1, 3)) |> dev
+gains = permutedims([2^k for k in 3:9][:,:,:], (2, 1, 3)) |> dev
 
 n_gains = length(gains)
 
@@ -82,8 +84,8 @@ n_gains = length(gains)
 
 m = Flux.Chain(
     # Flux.Conv((2^7,), 1 => 1, Flux.tanh),
-    Flux.Conv((2^8,), 1 => 1),
-    x -> repeat(x, 1, n_gains, 1),
+    Flux.Conv((2^5,), 1 => n_gains),
+    # x -> repeat(x, 1, n_gains, 1),
     # Flux.Upsample((2,), :bilinear),
     # Flux.Upsample((2,), :bilinear),
     # Flux.Upsample((2,), :bilinear),
@@ -102,8 +104,9 @@ m_offset = 48000 - size(m(dev(zeros(Float32, 48000, 1, 1))), 1)
 
 @info "m_offset: $m_offset"
 
-k_max = 9
+k_max = 10
 fft_sizes = [2^k_max 2^(k_max-1) 2^(k_max-2)]
+# fft_sizes = [2^k_max]
 
 @info "fft_sizes: $fft_sizes"
 
@@ -145,7 +148,7 @@ n_epochs = 5000
 
 loss_min = 1f10
 
-batchsize = 2^12
+batchsize = min(2^12, n_chunks)
 
 patience = 2^6
 
@@ -162,7 +165,7 @@ function stft_loss(overlap, bases, fft_sizes, y, y_hat)
 
     l += Flux.mse(fy, fy_hat) ./ Statistics.mean(fy.^2)
   end
-  l
+  l / length(bases)
 end
 
 train_losses = []
@@ -227,8 +230,13 @@ for epoch in 1:n_epochs
     end
 end
 
+include("write_test_output.jl")
+
+#=
 @info "Writing test file in $(outpath),,,"
 
 test_out = m_min(dev(test ./ x_std)[:,:,:])[:] .* y_std |> cpu
 test_out = cat(zeros(Float32, m_offset), test_out, dims=1)
 WAV.wavwrite(test_out, "$(outpath)/test_$(test_file_name).wav"; Fs=fs_x)
+
+=#

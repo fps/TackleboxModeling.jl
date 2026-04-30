@@ -1,0 +1,10 @@
+@info "Writing test file in $(outpath),,,"
+
+test_out = m_min(dev(test ./ x_std)[:,:,:])[:] .* y_std |> cpu
+test_out = cat(zeros(Float32, m_offset), test_out, dims=1)
+WAV.wavwrite(test_out, "$(outpath)/test_$(test_file_name).wav"; Fs=fs_x)
+
+train_out = m_min(dev(x ./ x_std)[:,:,:])[:] .* y_std |> cpu
+train_out = cat(zeros(Float32, m_offset), train_out, dims=1)
+WAV.wavwrite(train_out, "$(outpath)/train_out.wav"; Fs=fs_x)
+
