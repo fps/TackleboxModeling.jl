@@ -84,7 +84,7 @@ n_gains = length(gains)
 
 m = Flux.Chain(
     # Flux.Conv((2^7,), 1 => 1, Flux.tanh),
-    Flux.Conv((2^5,), 1 => n_gains),
+    Flux.Conv((2^3,), 1 => n_gains),
     # x -> repeat(x, 1, n_gains, 1),
     # Flux.Upsample((2,), :bilinear),
     # Flux.Upsample((2,), :bilinear),
@@ -94,47 +94,19 @@ m = Flux.Chain(
     # Flux.MeanPool((2,), stride=2),
     # Flux.MeanPool((2,), stride=2),
     Flux.Conv((1,), n_gains => 1),
-    Flux.Conv((2^10,), 1 => 1)
+    Flux.Conv((2^3,), 1 => 1)
     # [Flux.Conv((16,), 1 => 1, dilation = 4^k) for k in 0:3]...
 ) |> dev
 
 # m[1].weight .*= 32
 
-m_offset = 48000 - size(m(dev(zeros(Float32, 48000, 1, 1))), 1)
-
-@info "m_offset: $m_offset"
-
-k_max = 10
-fft_sizes = [2^k_max 2^(k_max-1) 2^(k_max-2)]
-# fft_sizes = [2^k_max]
-
-@info "fft_sizes: $fft_sizes"
-
-@info "Chunking data..."
-
-chunksize_x = maximum(fft_sizes) + m_offset
-chunksize_y = maximum(fft_sizes)
-overlap = div(minimum(fft_sizes), 2)
-
-n_samples = size(x, 1)
-n_chunks = div(n_samples - chunksize_x, overlap)
-
-
-@info "n_chunks: $n_chunks"
-
-chunked_x = zeros(Float32, chunksize_x, 1, n_chunks)
-chunked_y = zeros(Float32, chunksize_y, 1, n_chunks)
-
-for n in 1:n_chunks
-  chunked_x[:, 1, n] = x[(1+(n-1)*overlap):((n-1)*overlap+chunksize_x)]
-  chunked_y[:, 1, n] = y[m_offset .+ ((1+(n-1)*overlap):((n-1)*overlap+chunksize_y))]
-end
-
-chunked_x = chunked_x[:,:,:] |> dev
-chunked_y = chunked_y[:,:,:] |> dev
-
 function stft_basis(n); exp.(-im * 2 * Float32(pi) .* (1:div(n,2)) .* (0:(n - 1))' ./ n); end
 
+k_max = 11
+fft_sizes = [2^k_max 2^(k_max-1) 2^(k_max-2)]
+# fft_sizes = [2^k_max]
+  
+@info "fft_sizes: $fft_sizes"
 bases = map(fft_size -> stft_basis(fft_size), fft_sizes) |> dev
 windows = map(fft_size -> DSP.Windows.hann(fft_size), fft_sizes) |> dev
 bases = map(n -> windows[n]' .* bases[n], 1:length(bases))
@@ -142,17 +114,15 @@ bases = map(n -> windows[n]' .* bases[n], 1:length(bases))
 
 function stft(x); basis * (x .* window); end
 
-opt = Flux.setup(Flux.Adam(1e-2), m)
-
-n_epochs = 5000
+n_epochs = 200
 
 loss_min = 1f10
-
-batchsize = min(2^12, n_chunks)
 
 patience = 2^6
 
 min_epoch = 1
+
+lr = 1f-3
 
 function stft_loss(overlap, bases, fft_sizes, y, y_hat)
   l = 0
@@ -160,76 +130,123 @@ function stft_loss(overlap, bases, fft_sizes, y, y_hat)
   n_y_hat = size(y_hat, 1)
 
   for n in 1:length(bases)  
-    fy = abs.(bases[n] * y[1:fft_sizes[n], 1, :])
-    fy_hat = abs.(bases[n] * y_hat[1:fft_sizes[n], 1, :])
+    offset = Random.rand(1:fft_sizes[n])
+    n_base = size(bases[n], 1)
+    fy = abs.(bases[n] * y[(1:fft_sizes[n]) .+ offset, 1, :]) # ./ dev(reverse((1:n_base)))
+    fy_hat = abs.(bases[n] * y_hat[(1:fft_sizes[n]) .+ offset, 1, :]) # ./ dev(reverse((1:n_base)))
 
     l += Flux.mse(fy, fy_hat) ./ Statistics.mean(fy.^2)
+    # l += Statistics.mean(abs.(log.(fy) .- log.(fy_hat)))
   end
   l / length(bases)
 end
 
 train_losses = []
-for epoch in 1:n_epochs
-    @info "Epoch: $epoch"
-    global loss_min
-    global min_epoch
+for stage in 1:7
+  global m
+  m_offset = 48000 - size(m(dev(zeros(Float32, 48000, 1, 1))), 1)
+  
+  @info "m_offset: $m_offset"
+  
+  
+  @info "Chunking data..."
+  
+  chunksize_x = maximum(fft_sizes) * 2 + m_offset
+  chunksize_y = maximum(fft_sizes) * 2
+  overlap = div(minimum(fft_sizes), 2)
+  
+  n_samples = size(x, 1)
+  n_chunks = div(n_samples - chunksize_x, overlap)
+  
+  batchsize = min(2^12, n_chunks)
 
-    losses = []
-    for (x,y) in Flux.MLUtils.DataLoader((chunked_x, chunked_y), batchsize=batchsize, shuffle=true)
-        # print(".")
-        loss, grad = Flux.withgradient(m) do m
-            y_hat = m(x)
-    
-            # fy_hat = abs.(basis * (window .* circshift(y_hat, (shift1, 0))))
-            # fy = abs.(basis * (window .* circshift(y[:,1,:], (shift1, 0)))) 
-    
-            # fy_hat = abs.(basis * (window .* y_hat))
-            # fy = abs.(basis * (window .* y[:,1,:]))
-    
-            # fy_hat = abs.(basis * y_hat) ./ fft_size
-            # fy = abs.(basis * y[:,1,:]) ./ fft_size
-    
-            #=
-            fym = Statistics.mean(fy)
-    
-            fy = fy ./ fym
-            fy_hat = fy_hat ./ fym
-            =#
-    
-            # Flux.mse(fy_hat, fy) ./ Statistics.mean(fy.^2) + 1f-2 * Statistics.mean(y_hat)^2
-            stft_loss(overlap, bases, fft_sizes, y, y_hat) + Statistics.mean(y_hat).^2
-        end
-        Flux.update!(opt, m, grad[1])
-        push!(losses, loss)
-    end
+  
+  @info "n_chunks: $n_chunks"
+  
+  chunked_x = zeros(Float32, chunksize_x, 1, n_chunks)
+  chunked_y = zeros(Float32, chunksize_y, 1, n_chunks)
+  
+  for n in 1:n_chunks
+    chunked_x[:, 1, n] = x[(1+(n-1)*overlap):((n-1)*overlap+chunksize_x)]
+    chunked_y[:, 1, n] = y[m_offset .+ ((1+(n-1)*overlap):((n-1)*overlap+chunksize_y))]
+  end
+  
+  chunked_x = chunked_x[:,:,:] |> dev
+  chunked_y = chunked_y[:,:,:] |> dev
+  
+  opt = Flux.setup(Flux.Adam(lr), m)
 
-    loss = Statistics.mean(losses)
-
-    global m_prev = deepcopy(m)
-
-    @info "loss: $loss, loss_min: $loss_min, min_epoch: $(min_epoch), (epoch - min_epoch): $(epoch - min_epoch)" #, grad: $(grad[1])"
-    if !isfinite(loss)
-        @info "Ugh"
+  for epoch in 1:n_epochs
+      if epoch <= 10
+        Flux.adjust!(opt, lr / (11 - epoch))
+      end
+      @info "Epoch: $epoch"
+      global loss_min
+      global min_epoch
+  
+      losses = []
+      for (x,y) in Flux.MLUtils.DataLoader((chunked_x, chunked_y), batchsize=batchsize, shuffle=true)
+          # print(".")
+          loss, grad = Flux.withgradient(m) do m
+              y_hat = m(x)
+      
+              # fy_hat = abs.(basis * (window .* circshift(y_hat, (shift1, 0))))
+              # fy = abs.(basis * (window .* circshift(y[:,1,:], (shift1, 0)))) 
+      
+              # fy_hat = abs.(basis * (window .* y_hat))
+              # fy = abs.(basis * (window .* y[:,1,:]))
+      
+              # fy_hat = abs.(basis * y_hat) ./ fft_size
+              # fy = abs.(basis * y[:,1,:]) ./ fft_size
+      
+              #=
+              fym = Statistics.mean(fy)
+      
+              fy = fy ./ fym
+              fy_hat = fy_hat ./ fym
+              =#
+      
+              # Flux.mse(fy_hat, fy) ./ Statistics.mean(fy.^2) + 1f-2 * Statistics.mean(y_hat)^2
+              stft_loss(overlap, bases, fft_sizes, y, y_hat) + Statistics.mean(y_hat).^2
+          end
+          Flux.update!(opt, m, grad[1])
+          push!(losses, loss)
+      end
+  
+      loss = Statistics.mean(losses)
+  
+      global m_prev = deepcopy(m)
+  
+      @info "loss: $loss, loss_min: $loss_min, min_epoch: $(min_epoch), (epoch - min_epoch): $(epoch - min_epoch)" #, grad: $(grad[1])"
+      if !isfinite(loss)
+          @info "Ugh"
+          break
+      end
+  
+      if loss < loss_min
+        @info "loss_min: $loss_min"
+        loss_min = loss
+        min_epoch = epoch
+        global m_min = deepcopy(m)
+        # WAV.wavwrite(m(dev(x[:,:,:]))[:] .* y_std |> cpu, "model_output.wav"; Fs=fs_x)
+      end
+  
+      push!(train_losses, loss)
+      plt(log10.(train_losses), "Training losses (log10)") |> display
+  
+      if epoch - min_epoch > patience
+        @info "Patience exhausted: $(epoch - min_epoch)"
         break
-    end
+      end
+  end
 
-    if loss < loss_min
-      @info "loss_min: $loss_min"
-      loss_min = loss
-      min_epoch = epoch
-      global m_min = deepcopy(m)
-      # WAV.wavwrite(m(dev(x[:,:,:]))[:] .* y_std |> cpu, "model_output.wav"; Fs=fs_x)
-    end
-
-    push!(train_losses, loss)
-    plt(log10.(train_losses), "Training losses (log10)") |> display
-
-    if epoch - min_epoch > patience
-      @info "Patience exhausted: $(epoch - min_epoch)"
-      break
-    end
+  if stage <= 6
+    m = Flux.Chain(Flux.Conv(cat(m[1].weight, 1f-10 .* randn(Float32, size(m[1].weight)...), dims=1), m[1].bias), m[2], m[3],  Flux.Conv(cat(m[4].weight, 1f-10 .* randn(Float32, size(m[4].weight)...), dims=1), m[4].bias)) |> dev
+  else
+    m = Flux.Chain(m[1], m[2], m[3],  Flux.Conv(cat(m[4].weight, 1f-10 .* randn(Float32, size(m[4].weight)...), dims=1), m[4].bias)) |> dev
+  end
 end
-
+  
 include("write_test_output.jl")
 
 #=
