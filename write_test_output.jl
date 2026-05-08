@@ -1,4 +1,5 @@
 @info "Writing test file in $(outpath),,,"
+m_offset = 48000 - size(m(dev(zeros(Float32, 48000, 1, 1))), 1)
 
 test_out = m_min(dev(test ./ x_std)[:,:,:])[:] .* y_std |> cpu
 test_out = cat(zeros(Float32, m_offset), test_out, dims=1)

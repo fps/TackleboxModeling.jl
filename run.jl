@@ -58,11 +58,11 @@ x = dev(x)[:,:,:]
 n_gains = length(gains)
 
 m = Flux.Chain(
-    Flux.Conv((2^6,), 1 => 1),
+    Flux.Conv((2^7,), 1 => 1),
     x -> repeat(x, 1, n_gains, 1),
     x -> tanh.(gains .* x),
     Flux.Conv((1,), n_gains => 1),
-    Flux.Conv((2^7,), 1 => 1)) |> dev
+    Flux.Conv((2^10,), 1 => 1)) |> dev
 
 opt = Flux.setup(Flux.Adam(1e-3), m)
 
