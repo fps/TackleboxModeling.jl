@@ -28,8 +28,9 @@ plt(x, title) = UnicodePlots.lineplot(x[:] |> cpu, width=:auto, title=title)
 
 @info "Loading data..."
 
-x, fs_x = WAV.wavread("data/Take1_Audio 1-1_short.wav")
-# x, fs_x = WAV.wavread("data/noise_input.wav")
+# x, fs_x = WAV.wavread("data/nam_training_input.wav")
+# x, fs_x = WAV.wavread("data/Take1_Audio 1-1_shorter_0.5.wav")
+x, fs_x = WAV.wavread("data/noise_input.wav")
 # x = x[1:(div(size(x, 1), chunksize) * chunksize)]
 
 x_mean = Statistics.mean(x)
@@ -45,8 +46,9 @@ plt(x, "Input") |> display
 outpath = "data/marshall bluesbreaker 1962"
 # outpath = "data/nam_example"
 
-y, fs_y = WAV.wavread("$(outpath)/nam_Take1_Audio 1-1_short.wav")
-# y, fs_y = WAV.wavread("$(outpath)/noise_output.wav")
+# y, fs_y = WAV.wavread("$(outpath)/nam_training_output.wav")
+# y, fs_y = WAV.wavread("$(outpath)/nam_Take1_Audio 1-1_shorter_0.5.wav")
+y, fs_y = WAV.wavread("$(outpath)/noise_output.wav")
 y = y[1:size(x,1)]
 
 y_mean = Statistics.mean(y)
@@ -132,7 +134,7 @@ n_epochs = 1500
 
 loss_min = 1f10
 
-patience = 2^6
+patience = 2^8
 
 min_epoch = 1
 
