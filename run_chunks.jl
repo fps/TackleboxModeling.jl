@@ -28,15 +28,16 @@ plt(x, title) = UnicodePlots.lineplot(x[:] |> cpu, width=:auto, title=title)
 
 @info "Loading data..."
 
-# x, fs_x = WAV.wavread("data/nam_training_input.wav")
+x, fs_x = WAV.wavread("data/nam_training_input.wav")
 # x, fs_x = WAV.wavread("data/Take1_Audio 1-1_shorter_0.5.wav")
-x, fs_x = WAV.wavread("data/noise_input.wav")
+# x, fs_x = WAV.wavread("data/noise_input.wav")
 # x = x[1:(div(size(x, 1), chunksize) * chunksize)]
 
 x_mean = Statistics.mean(x)
-x_std = Statistics.std(x)
 x .-= x_mean
-x ./= x_std
+x_scale = Statistics.std(x)
+# x_scale = maximum(abs.(x))
+x ./= x_scale
 
 # x = x[1:div(size(x, 1), 4)]
 
@@ -46,20 +47,26 @@ plt(x, "Input") |> display
 outpath = "data/marshall bluesbreaker 1962"
 # outpath = "data/nam_example"
 
-# y, fs_y = WAV.wavread("$(outpath)/nam_training_output.wav")
+y, fs_y = WAV.wavread("$(outpath)/nam_training_output.wav")
 # y, fs_y = WAV.wavread("$(outpath)/nam_Take1_Audio 1-1_shorter_0.5.wav")
-y, fs_y = WAV.wavread("$(outpath)/noise_output.wav")
+# y, fs_y = WAV.wavread("$(outpath)/noise_output.wav")
 y = y[1:size(x,1)]
 
 y_mean = Statistics.mean(y)
-y_std = Statistics.std(y)
 y .-= y_mean
-y ./= y_std
+y_scale = Statistics.std(y)
+# y_scale = maximum(abs.(y))
+y ./= y_scale
 
 plt(y, "Output") |> display
 
 test_file_name = "Take1_Audio 1-1_short"
 test, test_fs = WAV.wavread("data/$(test_file_name).wav")
+
+test = Float32.(test)
+
+# test .-= x_mean
+# test ./= x_scale
 
 plt(test, "Test") |> display
 
@@ -91,23 +98,9 @@ function dist(x)
 end
 
 m = Flux.Chain(
-    Flux.Conv((2^5,), 1 => 1, Flux.tanh),
-    Flux.Conv((2^5,), 1 => 1, Flux.tanh),
-    # Flux.Conv((2^3,), 1 => n_gains),
-    # x -> repeat(x, 1, n_gains, 1),
-    # Flux.Upsample((2,), :bilinear),
-    # Flux.Upsample((2,), :bilinear),
-    # Flux.Upsample((2,), :bilinear),
-    # x -> Flux.tanh.(x),
-    # x -> gains .* x,
-    # x -> x ./ sqrt.(1 .+ x.^2),
-    # x -> dist(x),
-    # Flux.MeanPool((2,), stride=2),
-    # Flux.MeanPool((2,), stride=2),
-    # Flux.MeanPool((2,), stride=2),
-    # Flux.Conv((1,), n_gains => 1),
-    Flux.Conv((2^10,), 1 => 1)
-    # [Flux.Conv((16,), 1 => 1, dilation = 4^k) for k in 0:3]...
+    Flux.Conv((2^3,), 1 => 1, Flux.tanh),
+    Flux.Conv((2^3,), 1 => 1, Flux.tanh),
+    Flux.Conv((2^3,), 1 => 1)
 ) |> dev
 
 # m[1].weight .*= 32
@@ -130,7 +123,7 @@ fwindows = map(fft_size -> DSP.Windows.hann(div(fft_size, 2)), fft_sizes) |> dev
 
 function stft(x); basis * (x .* window); end
 
-n_epochs = 1500
+n_epochs = 100
 
 loss_min = 1f10
 
@@ -138,7 +131,7 @@ patience = 2^8
 
 min_epoch = 1
 
-lr = 1f-2
+lr = 1f-3
 
 function stft_loss(overlap, bases, fft_sizes, y, y_hat)
   l = 0
@@ -158,7 +151,7 @@ function stft_loss(overlap, bases, fft_sizes, y, y_hat)
 end
 
 train_losses = []
-for stage in 1:1
+for stage in 1:7
   global m
   m_offset = 48000 - size(m(dev(zeros(Float32, 48000, 1, 1))), 1)
   
@@ -246,7 +239,7 @@ for stage in 1:1
         loss_min = loss
         min_epoch = epoch
         global m_min = deepcopy(m)
-        # WAV.wavwrite(m(dev(x[:,:,:]))[:] .* y_std |> cpu, "model_output.wav"; Fs=fs_x)
+        # WAV.wavwrite(m(dev(x[:,:,:]))[:] .* y_scale |> cpu, "model_output.wav"; Fs=fs_x)
       end
   
       push!(train_losses, loss)
@@ -258,23 +251,21 @@ for stage in 1:1
       end
   end
 
-  #=
-  if stage <= 6
+  if stage < 7
     m = Flux.Chain(
-      Flux.Conv(cat(m[1].weight, 1f-20 .* randn(Float32, size(m[1].weight)...), dims=1)),
-      Flux.Conv(cat(m[2].weight, 1f-20 .* randn(Float32, size(m[2].weight)...), dims=1)),
-      Flux.Conv(cat(m[3].weight, 1f-20 .* randn(Float32, size(m[3].weight)...), dims=1)),
+      Flux.Conv(cat(m[1].weight, 1f-3 .* Statistics.std(m[1].weight) .* randn(Float32, size(m[1].weight)...), dims=1), m[1].bias, Flux.tanh),
+      Flux.Conv(cat(m[2].weight, 1f-3 .* Statistics.std(m[2].weight) .* randn(Float32, size(m[2].weight)...), dims=1), m[2].bias, Flux.tanh),
+      Flux.Conv(cat(m[3].weight, 1f-3 .* Statistics.std(m[3].weight) .* randn(Float32, size(m[3].weight)...), dims=1), m[3].bias),
     ) |> dev
-    # m = Flux.Chain(Flux.Conv(cat(m[1].weight, 1f-20 .* randn(Float32, size(m[1].weight)...), dims=1), m[1].bias), m[2], m[3],  Flux.Conv(cat(m[4].weight, 1f-20 .* randn(Float32, size(m[4].weight)...), dims=1), m[4].bias)) |> dev
+    # m = Flux.Chain(Flux.Conv(cat(m[1].weight, 1f-3 .* Statistics.std(m[1].weight)0 .* randn(Float32, size(m[1].weight)...), dims=1), m[1].bias), m[2], m[3],  Flux.Conv(cat(m[4].weight, 1f-20 .* randn(Float32, size(m[4].weight)...), dims=1), m[4].bias)) |> dev
   else
     m = Flux.Chain(
       m[1],
       m[2],
-      Flux.Conv(cat(m[3].weight, 1f-20 .* randn(Float32, size(m[3].weight)...), dims=1)),
+      Flux.Conv(cat(m[3].weight, 1f-3 .* Statistics.std(m[3].weight) .* randn(Float32, size(m[3].weight)...), dims=1), m[3].bias),
     ) |> dev
-     # m = Flux.Chain(m[1], m[2], m[3],  Flux.Conv(cat(m[4].weight, 1f-10 .* randn(Float32, size(m[4].weight)...), dims=1), m[4].bias)) |> dev
+     # m = Flux.Chain(m[1], m[2], m[3],  Flux.Conv(cat(m[4].weight, 1f-30 .* randn(Float32, size(m[4].weight)...), dims=1), m[4].bias)) |> dev
   end
-  =#
 end
   
 include("write_test_output.jl")
@@ -282,7 +273,7 @@ include("write_test_output.jl")
 #=
 @info "Writing test file in $(outpath),,,"
 
-test_out = m_min(dev(test ./ x_std)[:,:,:])[:] .* y_std |> cpu
+test_out = m_min(dev(test ./ x_scale)[:,:,:])[:] .* y_scale |> cpu
 test_out = cat(zeros(Float32, m_offset), test_out, dims=1)
 WAV.wavwrite(test_out, "$(outpath)/test_$(test_file_name).wav"; Fs=fs_x)
 
