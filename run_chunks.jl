@@ -97,6 +97,12 @@ function dist(x)
   (x0 .+ x1) ./ (sqrt.(1 .+ x0.^2) .+ sqrt.(1 .+ x1.^2))
 end
 
+function double_weights(weights, noise_scale = 1f-2)
+  c = noise_scale .* Statistics.std(weights) .* randn(Float32, size(weights, 1) + 1, 1, 1)
+  c[1] = 1
+  dev(DSP.conv(cpu(weights), c))
+end
+
 m = Flux.Chain(
     Flux.Conv((2^3,), 1 => 1, Flux.tanh),
     Flux.Conv((2^3,), 1 => 1, Flux.tanh),
@@ -253,16 +259,16 @@ for stage in 1:7
 
   if stage < 7
     m = Flux.Chain(
-      Flux.Conv(cat(m[1].weight, 1f-3 .* Statistics.std(m[1].weight) .* randn(Float32, size(m[1].weight)...), dims=1), m[1].bias, Flux.tanh),
-      Flux.Conv(cat(m[2].weight, 1f-3 .* Statistics.std(m[2].weight) .* randn(Float32, size(m[2].weight)...), dims=1), m[2].bias, Flux.tanh),
-      Flux.Conv(cat(m[3].weight, 1f-3 .* Statistics.std(m[3].weight) .* randn(Float32, size(m[3].weight)...), dims=1), m[3].bias),
+      Flux.Conv(double_weights(m[1].weight), m[1].bias, Flux.tanh),
+      Flux.Conv(double_weights(m[2].weight), m[2].bias, Flux.tanh),
+      Flux.Conv(double_weights(m[3].weight), m[3].bias),
     ) |> dev
     # m = Flux.Chain(Flux.Conv(cat(m[1].weight, 1f-3 .* Statistics.std(m[1].weight)0 .* randn(Float32, size(m[1].weight)...), dims=1), m[1].bias), m[2], m[3],  Flux.Conv(cat(m[4].weight, 1f-20 .* randn(Float32, size(m[4].weight)...), dims=1), m[4].bias)) |> dev
   else
     m = Flux.Chain(
       m[1],
       m[2],
-      Flux.Conv(cat(m[3].weight, 1f-3 .* Statistics.std(m[3].weight) .* randn(Float32, size(m[3].weight)...), dims=1), m[3].bias),
+      Flux.Conv(double_weights(m[3].weight), m[3].bias)
     ) |> dev
      # m = Flux.Chain(m[1], m[2], m[3],  Flux.Conv(cat(m[4].weight, 1f-30 .* randn(Float32, size(m[4].weight)...), dims=1), m[4].bias)) |> dev
   end
