@@ -1,0 +1,22 @@
+This software is in part inspired by Jim Lil's excellent "where does the sound come from..." series of videos. Especially his video titled "Tested: Where Does The Tone Come From In A Guitar Amplifier?" which you can watch here:
+
+https://www.youtube.com/watch?v=wcBEOcPtlYk
+
+The model used in this software is a very simple 1-dimensional convolutional network modeled after the three most common stages in a guitar amplifier:
+
+- Input tone shaping
+- Nonlinearity
+- Intermediate tone shaping
+- Nonlinearity
+- Cabinet tone shaping
+
+The neural model then becomes:
+
+- 1D-convolution of size (256) (1 channel)
+- tanh
+- 1D-convolution of size (512) (1 channel)
+- tanh
+- 1D-convolution of size (1024) (1 channel)
+
+This neural network allows an efficient implementation using partitioned convolution.
+
