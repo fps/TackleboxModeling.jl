@@ -9,6 +9,11 @@ struct tacklebox
   fftconvolver::FFTConvolver c2;
   fftconvolver::FFTConvolver c3;
 
+  float m_x_scale;
+  float m_x_mean;
+  float m_y_scale;
+  float m_y_mean;
+
   std::vector<float> m_buffer1;
   std::vector<float> m_buffer2;
 
@@ -27,9 +32,13 @@ struct tacklebox
     c3.process(m_buffer2.data(), out, nframes);
   }
 
-  tacklebox(float *w1, int nframes1, float *w2, int nframes2, float *w3, int nframes3, int blocksize) :
+  tacklebox(float *w1, int nframes1, float *w2, int nframes2, float *w3, int nframes3, float x_scale, float x_mean, float y_scale, float, y_mean, int blocksize) :
     m_buffer1(blocksize),
-    m_buffer2(blocksize)
+    m_buffer2(blocksize),
+    m_x_scale(x_scale),
+    m_x_mean(x_mean),
+    m_y_scale(y_scale),
+    m_y_mean(y_mean)
   {
     c1.init(blocksize, w1, nframes1);
     c2.init(blocksize, w2, nframes2);
