@@ -25,3 +25,6 @@ The two main parts of this software are:
 - Julia code to train a model. It uses CUDA.jl and cuDNN.jl in tandem with Flux.jl to perform the training on a GPU.
 - A simple LV2 plugin that allows the user to select one of the previously trained models. It would be easy to add model parameter loading from an e.g. JSON file but I don't need it. PRs welcome though.
 
+# License
+
+This software is free software available under the GPL v2 license. If you require different license terms, feel free to contact me.
