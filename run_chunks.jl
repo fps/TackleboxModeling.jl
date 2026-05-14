@@ -85,11 +85,22 @@ y = DSP.filt(f, y)
 
 AmpModeling.offset(x::Function) = 0
 
-gains = permutedims([2^k for k in 3:3][:,:,:], (2, 1, 3)) |> dev
+function model_to_c(m, prefix = "tacklebox")
+  """
+  float $(prefix)_x_scale = $(x_scale);
+  float $(prefix)_x_mean = $(x_mean);
+  float $(prefix)_y_scale = $(y_scale);
+  float $(prefix)_y_mean = $(y_mean);
 
-n_gains = length(gains)
+  float w1[] = { $(join(cpu(m[1].weight), ", ")) };
+  float w2[] = { $(join(cpu(m[2].weight), ", ")) };
+  float w3[] = { $(join(cpu(m[3].weight), ", ")) };
 
-# f_decimation = DSP.remez(DSP.remezord(16000/(48000*8), 20000/(48000*8), 0.1, 0.001), [(0, 20000) => 1, (22000, 48000*8/2) => 0], Hz=(48000*8))
+  float b1 = $(big(cpu(m[1].bias)[1]));
+  float b2 = $(big(cpu(m[2].bias)[1]));
+  float b3 = $(big(cpu(m[3].bias)[1]));
+  """
+end
 
 function dist(x)
   x0 = x[2:end,:,:]
