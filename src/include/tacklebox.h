@@ -22,7 +22,7 @@ struct tacklebox
   float m_b2;
   float m_b3;
 
-  void process(float const *in, float *out, int nframes)
+  void process(float const * const in, float * const out, int nframes)
   {
     for (int index = 0; index < nframes; ++index)
     {
@@ -45,7 +45,7 @@ struct tacklebox
     }
   }
 
-  tacklebox(float *w1, float b1, int nframes1, float *w2, float b2, int nframes2, float *w3, float b3, int nframes3, float x_scale, float x_mean, float y_scale, float y_mean, int blocksize) :
+  tacklebox(float const * const w1, const float b1, const int nframes1, float const * const w2, float const b2, int const nframes2, float const * const w3, float const b3, int const nframes3, float const x_scale, float const x_mean, float const y_scale, float const y_mean, int const blocksize) :
     m_buffer1(blocksize),
     m_buffer2(blocksize),
     m_x_scale(x_scale),
