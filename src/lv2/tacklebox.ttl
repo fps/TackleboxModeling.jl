@@ -13,7 +13,7 @@
 		a lv2:InputPort , lv2:ControlPort ;
 		lv2:index 0 ;
 		lv2:symbol "pre_gain" ;
-		lv2:name "Pre Gain"
+		lv2:name "Pre Gain" ;
 		lv2:default 0.0 ;
 		lv2:minimum -90.0 ;
 		lv2:maximum 24.0 ;
@@ -22,7 +22,7 @@
 		a lv2:InputPort , lv2:ControlPort ;
 		lv2:index 1 ;
 		lv2:symbol "post_gain" ;
-		lv2:name "Post Gain"
+		lv2:name "Post Gain" ;
 		lv2:default 0.0 ;
 		lv2:minimum -90.0 ;
 		lv2:maximum 24.0 ;

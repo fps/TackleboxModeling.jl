@@ -12,7 +12,7 @@ struct tacklebox
   std::vector<float> m_buffer1;
   std::vector<float> m_buffer2;
 
-  void process(float *in, float *out, int nframes)
+  void process(float const *in, float *out, int nframes)
   {
     c1.process(in, m_buffer1.data(), nframes);
     for (int index = 0; index < nframes; ++index)
