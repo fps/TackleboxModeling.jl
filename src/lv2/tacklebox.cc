@@ -1,5 +1,6 @@
 #include <tacklebox.h>
 #include <lv2/core/lv2.h>
+#include <iostream>
 
 #define TACKLEBOX_URI "http://dfdx.eu/lv2/tacklebox"
 
@@ -54,7 +55,10 @@ static void activate(LV2_Handle instance) {}
 static void deactivate(LV2_Handle instance) {}
 static const void *extension_data(const char *uri) { return NULL; }
 
-static LV2_Handle instantiate(const LV2_Descriptor * d, double x, const char *c, const LV2_Feature *const *f) { return (LV2_Handle) new Tacklebox; }
+static LV2_Handle instantiate(const LV2_Descriptor * d, double x, const char *c, const LV2_Feature *const *f) 
+{ 
+    std::cout << "instantiate...\n";
+  return (LV2_Handle) new Tacklebox; }
 static void cleanup(LV2_Handle instance) { delete (Tacklebox*)instance; }
 
 static void

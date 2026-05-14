@@ -2,6 +2,7 @@
 
 #include <FFTConvolver.h>
 #include <cmath>
+#include <iostream>
 
 struct tacklebox
 {
@@ -55,9 +56,13 @@ struct tacklebox
     m_b2(b2),
     m_b3(b3)
   {
+    std::cout << "tacklebox()" << std::endl;
     c1.init(blocksize, w1, nframes1);
+    std::cout << "1" << std::endl;
     c2.init(blocksize, w2, nframes2);
+    std::cout << "2" << std::endl;
     c3.init(blocksize, w3, nframes3);
+    std::cout << "tacklebox() done" << std::endl;
   }
 };
 
