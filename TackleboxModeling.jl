@@ -19,3 +19,6 @@ function model_to_c(m)
   """
 end
 
+function models_to_c(ms)
+  
+end
