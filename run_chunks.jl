@@ -43,9 +43,9 @@ x ./= x_scale
 
 plt(x, "Input") |> display
 
-outpath = "data/BrianMay"
+# outpath = "data/BrianMay"
 # outpath = "data/Fender Deluxe Reverb"
-# outpath = "data/marshall bluesbreaker 1962"
+outpath = "data/marshall bluesbreaker 1962"
 # outpath = "data/nam_example"
 
 y, fs_y = WAV.wavread("$(outpath)/nam_training_output.wav")
