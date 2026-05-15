@@ -16,10 +16,13 @@ import WAV
 import Statistics
 import FFTW
 import Random
+import BSON
 
 dev = Flux.gpu
 cpu = Flux.cpu
 # dev = cpu
+
+include("TackleboxModeling.jl")
 
 plt(x) = UnicodePlots.lineplot(x[:] |> cpu, width=:auto)
 plt(x, title) = UnicodePlots.lineplot(x[:] |> cpu, width=:auto, title=title)
@@ -121,15 +124,15 @@ fwindows = map(fft_size -> DSP.Windows.hann(div(fft_size, 2)), fft_sizes) |> dev
 
 function stft(x); basis * (x .* window); end
 
+lr = 2e-3
+
 n_epochs = 100
 
 loss_min = 1f10
 
-patience = 2^8
+patience = 2^3
 
 min_epoch = 1
-
-lr = 1f-3
 
 function stft_loss(overlap, bases, fft_sizes, y, y_hat)
   l = 0
@@ -191,9 +194,13 @@ for stage in 1:6
   opt = Flux.setup(Flux.Adam(lr), m)
 
   for epoch in 1:n_epochs
-      if epoch <= 50
-        Flux.adjust!(opt, lr / (51 - epoch))
+      if epoch <= 10
+         Flux.adjust!(opt, lr * (epoch / 10))
       end
+      
+      # if epoch <= 50
+      #   Flux.adjust!(opt, lr / (51 - epoch))
+      # end
       @info "Stage: $stage, epoch: $epoch, m: $m"
       global loss_min
       global min_epoch
