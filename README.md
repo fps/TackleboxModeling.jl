@@ -20,7 +20,7 @@ The neural model then becomes:
 
 Here the 1D-convolutions take on the role of the tone shaping stages and the tanh activation functions perform the nonlinearity/distortion.
 
-This architecture allows an efficient implementation in a plugin using partitioned convolution. 
+This architecture allows an efficient implementation in a plugin using partitioned convolution (about 1/10 of the processing load compared to standard NAMs). 
 
 The code is flexible enough to add additional stages which can be useful for higher gain models//.
 
