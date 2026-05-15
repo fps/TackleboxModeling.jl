@@ -29,6 +29,12 @@ The two main parts of this software are:
 - Julia code to train a model. It uses CUDA.jl and cuDNN.jl in tandem with Flux.jl to perform the training on a GPU.
 - A simple LV2 plugin that allows the user to select one of the previously trained models. It would be easy to add model parameter loading from an e.g. JSON file but I don't need it. PRs welcome though.
 
+The models which are included with the plugin have been trained on input/output pairs produced by neural amp modeller (NAM) models. To my ears they sound quite similar on my little test snippet:
+
+
+
+This code is just a proof of concept.
+
 # Building the plugin
 
 ```bash
