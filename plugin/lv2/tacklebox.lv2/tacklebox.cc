@@ -96,12 +96,12 @@ run(LV2_Handle instance, uint32_t n_samples)
   {
     if (n_samples_left >= 64)
     {
-      tacklebox->t->process(input, output, 64);
+      tacklebox->t->process(input, output, pre_coef, post_coef, 64);
       n_samples_left -= 64;
     }
     else
     {
-      tacklebox->t->process(input, output, n_samples_left);
+      tacklebox->t->process(input, output, pre_coef, post_coef, n_samples_left);
       n_samples_left -= n_samples_left;
     }
   }

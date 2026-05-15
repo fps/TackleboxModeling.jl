@@ -8,12 +8,11 @@
 namespace tacklebox
 {
 
-  template<int N1, int N2, int N3>
   struct params
   {
-    const std::array<float, N1> m_w1;
-    const std::array<float, N2> m_w2;
-    const std::array<float, N3> m_w3;
+    const std::array<float, 256> m_w1;
+    const std::array<float, 512> m_w2;
+    const std::array<float, 1024> m_w3;
   
     const float m_b1;
     const float m_b2;
@@ -21,6 +20,7 @@ namespace tacklebox
   
     const float m_x_scale;
     const float m_x_mean;
+
     const float m_y_scale;
     const float my_mean;
   };
@@ -43,11 +43,11 @@ namespace tacklebox
     float m_b2;
     float m_b3;
   
-    void process(float const * const in, float * const out, int nframes)
+    void process(float const * const in, float * const out, float const pre_coef, float const post_coef, int const nframes)
     {
       for (int index = 0; index < nframes; ++index)
       {
-        m_buffer1[index] = (in[index] - m_x_mean) / m_x_scale;
+        m_buffer1[index] = (pre_coef * in[index] - m_x_mean) / m_x_scale;
       }
       m_c1.process(m_buffer1.data(), m_buffer2.data(), nframes);
       for (int index = 0; index < nframes; ++index)
@@ -62,7 +62,7 @@ namespace tacklebox
       m_c3.process(m_buffer1.data(), out, nframes);
       for (int index = 0; index < nframes; ++index)
       {
-        out[index] = ((out[index] + m_b3) * m_y_scale) + m_y_mean;
+        out[index] = post_coef * (((out[index] + m_b3) * m_y_scale) + m_y_mean);
       }
     }
   
