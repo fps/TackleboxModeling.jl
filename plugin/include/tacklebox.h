@@ -7,83 +7,93 @@
 
 namespace tacklebox
 {
-
-  struct params
+  struct layer
   {
-    const std::array<float, 256> m_w1;
-    const std::array<float, 512> m_w2;
-    const std::array<float, 1024> m_w3;
-  
-    const float m_b1;
-    const float m_b2;
-    const float m_b3;
-  
-    const float m_x_scale;
-    const float m_x_mean;
-
-    const float m_y_scale;
-    const float my_mean;
+    std::vector<float> weights;
+    float bias;
+    std::string activation;
   };
   
   struct model
   {
-    std::vector<float> m_buffer1;
-    std::vector<float> m_buffer2;
+    std::vector<layer> layers;
+    float x_scale;
+    float x_mean;
+    float y_scale;
+    float y_mean;
+  };
+
+  struct processor
+  {
+    std::vector<float> buffer1;
+    std::vector<float> buffer2;
   
-    float m_x_scale;
-    float m_x_mean;
-    float m_y_scale;
-    float m_y_mean;
-  
-    fftconvolver::FFTConvolver m_c1;
-    fftconvolver::FFTConvolver m_c2;
-    fftconvolver::FFTConvolver m_c3;
-  
-    float m_b1;
-    float m_b2;
-    float m_b3;
+    float x_scale;
+    float x_mean;
+    float y_scale;
+    float y_mean;
+
+    std::vector<fftconvolver::FFTConvolver> convolvers;
+    std::vector<float> biases;  
   
     void process(float const * const in, float * const out, float const pre_coef, float const post_coef, int const nframes)
     {
+      /*
       for (int index = 0; index < nframes; ++index)
       {
-        m_buffer1[index] = (pre_coef * in[index] - m_x_mean) / m_x_scale;
+        buffer1[index] = (pre_coef * in[index] - x_mean) / x_scale;
       }
-      m_c1.process(m_buffer1.data(), m_buffer2.data(), nframes);
+      c1.process(buffer1.data(), buffer2.data(), nframes);
       for (int index = 0; index < nframes; ++index)
       {
-        m_buffer2[index] = tanhf(m_buffer2[index] + m_b1);
+        buffer2[index] = tanhf(buffer2[index] + b1);
       }
-      m_c2.process(m_buffer2.data(), m_buffer1.data(), nframes);
+      c2.process(buffer2.data(), buffer1.data(), nframes);
       for (int index = 0; index < nframes; ++index)
       {
-        m_buffer1[index] = tanhf(m_buffer1[index] + m_b2);
+        buffer1[index] = tanhf(buffer1[index] + b2);
       }
-      m_c3.process(m_buffer1.data(), out, nframes);
+      c3.process(buffer1.data(), out, nframes);
       for (int index = 0; index < nframes; ++index)
       {
-        out[index] = post_coef * (((out[index] + m_b3) * m_y_scale) + m_y_mean);
+        out[index] = post_coef * (((out[index] + b3) * y_scale) + y_mean);
       }
+      */
     }
-  
-    model(float const * const w1, const float b1, const int nframes1, float const * const w2, float const b2, int const nframes2, float const * const w3, float const b3, int const nframes3, float const x_scale, float const x_mean, float const y_scale, float const y_mean, int const blocksize) :
-      m_buffer1(blocksize),
-      m_buffer2(blocksize),
-      m_x_scale(x_scale),
-      m_x_mean(x_mean),
-      m_y_scale(y_scale),
-      m_y_mean(y_mean),
-      m_b1(b1),
-      m_b2(b2),
-      m_b3(b3)
+ 
+    /* 
+    processor(float const * const w1, const float b1, const int nframes1, float const * const w2, float const b2, int const nframes2, float const * const w3, float const b3, int const nframes3, float const x_scale, float const x_mean, float const y_scale, float const y_mean, int const blocksize) :
+      buffer1(blocksize),
+      buffer2(blocksize),
+      x_scale(x_scale),
+      x_mean(x_mean),
+      y_scale(y_scale),
+      y_mean(y_mean),
+      b1(b1),
+      b2(b2),
+      b3(b3)
     {
-      std::cout << "model()" << std::endl;
-      m_c1.init(blocksize, w1, nframes1);
+      std::cout << "processor()" << std::endl;
+      c1.init(blocksize, w1, nframes1);
       std::cout << "1" << std::endl;
-      m_c2.init(blocksize, w2, nframes2);
+      c2.init(blocksize, w2, nframes2);
       std::cout << "2" << std::endl;
-      m_c3.init(blocksize, w3, nframes3);
-      std::cout << "model() done" << std::endl;
+      c3.init(blocksize, w3, nframes3);
+      std::cout << "processor() done" << std::endl;
+    }
+    */
+
+    processor(model const & m, int blocksize) :
+      buffer1(blocksize),
+      buffer2(blocksize),
+      x_scale(m.x_scale),
+      x_mean(m.x_mean),
+      y_scale(m.y_scale),
+      y_mean(m.y_mean),
+      convolvers(m.layers.size()),
+      biases(m.layers.size())
+    {
+      
     }
   };
 } 
