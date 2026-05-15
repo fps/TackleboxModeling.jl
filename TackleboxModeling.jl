@@ -25,30 +25,7 @@ $(join([layer_to_c(l) for l in m]))
 """
 end
 
-function models_to_c(ms)
-"""
-  #include <vector>
-  #include <string>
-
-  struct layer
-  {
-    std::vector<float> weights;
-    float bias;
-    std::string activation;
-  };
-
-  struct model
-  {
-    std::vector<layer> layers;
-    float x_scale;
-    float x_mean;
-    float y_scale;
-    float y_mean;
-  };
-
-  std::vector<model> models = 
-  {
-$(join([model_to_c(m) for m in ms]))
-  };
-"""
+function model_to_bson(model_path, m, x_scale, x_mean, y_scale, y_mean)
+  m_cpu = m |> cpu
+  BSON.@save model_path m_cpu x_scale x_mean y_scale y_mean
 end

@@ -6,25 +6,25 @@
 
 std::vector<tacklebox::model> models =
 {
+  #include "../../../data/Fender Deluxe Reverb/model.cc"
   #include "../../../data/BrianMay/model.cc"
 };
 
-struct Tacklebox{
-    tacklebox::processor *t;
+struct Tacklebox
+{
+    std::vector<tacklebox::processor> processors;
     const float *pre_gain;     //control input
     const float *post_gain;    //control input
     const float *data_in;  //audio  input
     float       *data_out; //audio output
+    const float *model;
 
-    Tacklebox() :
-      t(new tacklebox::processor(models[0], 64))
+    Tacklebox() 
     {
-
-    }
-
-    ~Tacklebox()
-    {
-      delete t;
+      for (size_t index = 0; index < models.size(); ++index)
+      {
+        processors.push_back(tacklebox::processor(models[index], 64));
+      }
     }
 };
 
@@ -32,7 +32,8 @@ typedef enum {
     TACKLEBOX_PRE_GAIN,
     TACKLEBOX_POST_GAIN,
     TACKLEBOX_INPUT,
-    TACKLEBOX_OUTPUT
+    TACKLEBOX_OUTPUT,
+    TACKLEBOX_MODEL,
 } PortIndex;
 
 static void activate(LV2_Handle instance) {}
@@ -57,6 +58,7 @@ connect_port(LV2_Handle instance,
 	case TACKLEBOX_POST_GAIN: tacklebox->post_gain = (const float*)data; break;
 	case TACKLEBOX_INPUT: tacklebox->data_in = (const float*)data; break;
 	case TACKLEBOX_OUTPUT: tacklebox->data_out = (float*)data; break;
+	case TACKLEBOX_MODEL: tacklebox->model = (float*)data; break;
 	}
 }
 
@@ -65,12 +67,17 @@ connect_port(LV2_Handle instance,
 static void
 run(LV2_Handle instance, uint32_t n_samples)
 {
-	const Tacklebox* tacklebox = (const Tacklebox*)instance;
+	Tacklebox* tacklebox = (Tacklebox*)instance;
 
 	const float        pre_gain   = *(tacklebox->pre_gain);
 	const float        post_gain   = *(tacklebox->post_gain);
 	const float* const input  = tacklebox->data_in;
 	float* const       output = tacklebox->data_out;
+  float const        model = *(tacklebox->model);
+
+  size_t model_index = (size_t)round(model * (tacklebox->processors.size() - 1));
+
+  tacklebox::processor &p = tacklebox->processors[model_index];
 
 	const float pre_coef = DB_CO(pre_gain);
 	const float post_coef = DB_CO(post_gain);
@@ -80,12 +87,12 @@ run(LV2_Handle instance, uint32_t n_samples)
   {
     if (n_samples_left >= 64)
     {
-      tacklebox->t->process(input, output, pre_coef, post_coef, 64);
+      p.process(input, output, pre_coef, post_coef, 64);
       n_samples_left -= 64;
     }
     else
     {
-      tacklebox->t->process(input, output, pre_coef, post_coef, n_samples_left);
+      p.process(input, output, pre_coef, post_coef, n_samples_left);
       n_samples_left -= n_samples_left;
     }
   }
