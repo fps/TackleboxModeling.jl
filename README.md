@@ -2,7 +2,7 @@ This software is in part inspired by Jim Lil's excellent "where does the tone co
 
 https://www.youtube.com/watch?v=wcBEOcPtlYk
 
-The model used in this software is a very simple 1-dimensional convolutional network modeled after the three most common stages in a guitar amplifier:
+In this video Jim belabors the point that most common amplifiers can be broken down into three tone shaping stages, each possibly followed by a non-linearity:
 
 - Input tone shaping
 - Nonlinearity
@@ -18,7 +18,11 @@ The neural model then becomes:
 - tanh
 - 1D-convolution of size (1024) (1 channel)
 
-This neural network allows an efficient implementation using partitioned convolution.
+Here the 1D-convolutions take on the role of the tone shaping stages and the tanh activation functions perform the nonlinearity/distortion.
+
+This architecture allows an efficient implementation in a plugin using partitioned convolution. 
+
+The code is flexible enough to add additional stages which can be useful for higher gain models//.
 
 The two main parts of this software are:
 
