@@ -29,7 +29,7 @@ The two main parts of this software are:
 - Julia code to train a model. It uses CUDA.jl and cuDNN.jl in tandem with Flux.jl to perform the training on a GPU.
 - A simple LV2 plugin that allows the user to select one of the previously trained models. It would be easy to add model parameter loading from an e.g. JSON file but I don't need it. PRs welcome though.
 
-The models which are included with the plugin have been trained on input/output pairs produced by neural amp modeller (NAM) models. To my ears they sound quite similar on my little test snippet. You can find them in the data/ folder in the respective model subdirectory (the prefix "nam_" denotes the audio files rendered by NAM. the "test_" prefix denotes the audio files rendered by the tacklebox).
+The models which are included with the plugin have been trained on input/output pairs produced by neural amp modeller (NAM) models. So they are "2nd-generation models" ;) To my ears they sound quite similar on my little test snippet. You can find them in the data/ folder in the respective model subdirectory (the prefix "nam_" denotes the audio files rendered by NAM. the "test_" prefix denotes the audio files rendered by the tacklebox).
 
 This code is just a proof of concept.
 
@@ -39,6 +39,17 @@ This code is just a proof of concept.
 meson setup build -Dbuildtype=release
 meson compile -vC build
 ```
+
+# Installing the plugin
+
+- Add the `build/plugin/lv2` directory to your `LV2_PATH` or move the `build/plugin/lv2/tacklebox.lv2` directory to a location on your `LV2_PATH`.
+
+# TODOs / Limitations
+
+- Try oversampling for the non-linearity in the plugin and check whether that alters the sound too much
+- Implement better model selection in the LV2 plugin
+- Improve the training code from being a stinking pile of poop to something reusable
+- Implement time-distributed partitioned convolution to make the plugin more efficient
 
 # License
 
