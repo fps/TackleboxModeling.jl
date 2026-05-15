@@ -26,14 +26,14 @@ float y_mean = 0.000547690776042192;
 
 
 struct Tacklebox{
-    tacklebox *t;
+    tacklebox::model *t;
     const float *pre_gain;     //control input
     const float *post_gain;    //control input
     const float *data_in;  //audio  input
     float       *data_out; //audio output
 
     Tacklebox() :
-      t(new tacklebox(w1, b1, 256, w2, b2, 512, w3, b3, 1024, x_scale, x_mean, y_scale, y_mean, 64))
+      t(new tacklebox::model(w1, b1, 256, w2, b2, 512, w3, b3, 1024, x_scale, x_mean, y_scale, y_mean, 64))
     {
 
     }
