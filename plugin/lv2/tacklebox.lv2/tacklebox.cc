@@ -7,6 +7,7 @@
 std::vector<tacklebox::model> models =
 {
   #include "../../../data/Fender Deluxe Reverb/model.cc"
+  #include "../../../data/marshall bluesbreaker 1962/model.cc"
   #include "../../../data/BrianMay/model.cc"
 };
 

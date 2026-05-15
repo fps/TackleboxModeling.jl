@@ -17,8 +17,6 @@ import Statistics
 import FFTW
 import Random
 
-include("../AmpModeling.jl/src/AmpModeling.jl")
-
 dev = Flux.gpu
 cpu = Flux.cpu
 # dev = cpu
@@ -73,7 +71,9 @@ plt(test, "Test") |> display
 
 @info "Setting up model..."
 
-AmpModeling.offset(x::Function) = 0
+offset(x::Function) = 0
+offset(c::Flux.Conv) = size(c.weight, 1) - 1
+offset(c::Flux.Chain) = sum([offset(l) for l in m])
 
 function dist(x)
   x0 = x[2:end,:,:]
@@ -97,6 +97,9 @@ m_min = Flux.Chain(
     Flux.Conv((2^3,), 1 => 1, Flux.tanh),
     Flux.Conv((2^4,), 1 => 1)
 ) |> dev
+
+@info "m_min: $m_min"
+@info "offset(m_min): $(offset(m_min))"
 
 # m[1].weight .*= 32
 
@@ -154,7 +157,8 @@ for stage in 1:6
 
   @info("m: $m")
 
-  m_offset = 48000 - size(m(dev(zeros(Float32, 48000, 1, 1))), 1)
+  # m_offset = 48000 - size(m(dev(zeros(Float32, 48000, 1, 1))), 1)
+  m_offset = offset(m)
   
   @info "m_offset: $m_offset"
   
