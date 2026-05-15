@@ -23,7 +23,15 @@ namespace tacklebox
     float y_mean;
   };
 
-  struct processor
+  inline void tanh_activation(float *data, int nframes, float bias)
+  {
+    for (int index = 0; index < nframes; ++index)
+    {
+      data[index] = tanhf(data[index] + bias);
+    }
+  }
+
+ struct processor
   {
     std::vector<float> buffer1;
     std::vector<float> buffer2;
@@ -35,30 +43,51 @@ namespace tacklebox
 
     std::vector<fftconvolver::FFTConvolver> convolvers;
     std::vector<float> biases;  
+    std::vector<std::string> activations;
   
-    void process(float const * const in, float * const out, float const pre_coef, float const post_coef, int const nframes)
+    inline void process_layer(int layer, float * input, float * output, int nframes)
     {
-      /*
+      convolvers[layer].process(input, output, n_frames);
+
+      if (activations[index] == "tanh")
+      {
+        tanh_activation(output, nframes, biases[layer]); 
+      }
+      else
+      {
+        for (int index = 0; index < nframes; ++index)
+        {
+          output[index] += biases[layer];
+        }
+      }
+    }
+  
+     inline void process(float const * const in, float * const out, float const pre_coef, float const post_coef, int const nframes)
+    {
       for (int index = 0; index < nframes; ++index)
       {
         buffer1[index] = (pre_coef * in[index] - x_mean) / x_scale;
       }
-      c1.process(buffer1.data(), buffer2.data(), nframes);
-      for (int index = 0; index < nframes; ++index)
+
+      for (int layer = 0; layers < biases.size(); ++layer)
       {
-        buffer2[index] = tanhf(buffer2[index] + b1);
+        if (layer % 2 == 0)
+        {
+          process_layer(layer, buffer1.data(), buffer2.data(), nframes);
+        }
+        else
+        {
+          process_layer(layer, buffer2.data(), buffer1.data(), nframes);
+        }
       }
-      c2.process(buffer2.data(), buffer1.data(), nframes);
-      for (int index = 0; index < nframes; ++index)
+
+      if (biases.size() % 2 == 0)
       {
-        buffer1[index] = tanhf(buffer1[index] + b2);
+        for (int index = 0; index < nframes; ++index)
+        {
+          out[index] = post_coef * (((out[index] + b3) * y_scale) + y_mean);
+        }
       }
-      c3.process(buffer1.data(), out, nframes);
-      for (int index = 0; index < nframes; ++index)
-      {
-        out[index] = post_coef * (((out[index] + b3) * y_scale) + y_mean);
-      }
-      */
     }
  
     /* 
@@ -91,9 +120,15 @@ namespace tacklebox
       y_scale(m.y_scale),
       y_mean(m.y_mean),
       convolvers(m.layers.size()),
-      biases(m.layers.size())
+      biases(m.layers.size()),
+      activations(m.layers.size())
     {
-      
+      for (size_t index = 0; index < m.layers.size(); ++index)
+      {
+        convolvers[index].init(blocksize, m.layers[index].weights.data(), m.layers[index].weights.size());
+        biases[index] = m.layers[index].bias;
+        activations[index] = m.layers[index].activation;
+      } 
     }
   };
 } 
