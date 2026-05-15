@@ -47,9 +47,9 @@ namespace tacklebox
   
     inline void process_layer(int layer, float * input, float * output, int nframes)
     {
-      convolvers[layer].process(input, output, n_frames);
+      convolvers[layer].process(input, output, nframes);
 
-      if (activations[index] == "tanh")
+      if (activations[layer] == "tanh")
       {
         tanh_activation(output, nframes, biases[layer]); 
       }
@@ -69,7 +69,7 @@ namespace tacklebox
         buffer1[index] = (pre_coef * in[index] - x_mean) / x_scale;
       }
 
-      for (int layer = 0; layers < biases.size(); ++layer)
+      for (size_t layer = 0; layer < biases.size(); ++layer)
       {
         if (layer % 2 == 0)
         {
@@ -85,7 +85,14 @@ namespace tacklebox
       {
         for (int index = 0; index < nframes; ++index)
         {
-          out[index] = post_coef * (((out[index] + b3) * y_scale) + y_mean);
+          out[index] = post_coef * ((buffer1[index] * y_scale) + y_mean);
+        }
+      }
+      else
+      {
+        for (int index = 0; index < nframes; ++index)
+        {
+          out[index] = post_coef * ((buffer2[index] * y_scale) + y_mean);
         }
       }
     }
