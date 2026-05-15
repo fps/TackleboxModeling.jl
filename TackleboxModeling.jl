@@ -1,24 +1,54 @@
 
+function layer_to_c(l)
+"""
+        {
+          { $(join(big.(cpu(l.weight)), ", ")) },
+          $(big(cpu(l.bias)[1])),
+          $(if l.σ == Flux.tanh; "\"tanh\""; else "\"nothing\""; end),
+        },
+"""
+end
+
 function model_to_c(m)
-  """
-  float x_scale = $(big(x_scale));
-  float x_mean = $(big(x_mean));
+"""
+    {
+      {
+$(join([layer_to_c(l) for l in m]))
+      },
 
-  float y_scale = $(big(y_scale));
-  float y_mean = $(big(y_mean));
-
-  float w1[] = { $(join(big.(cpu(m[1].weight)), ", ")) };
-
-  float w2[] = { $(join(big.(cpu(m[2].weight)), ", ")) };
-
-  float w3[] = { $(join(big.(cpu(m[3].weight)), ", ")) };
-
-  float b1 = $(big(cpu(m[1].bias)[1]));
-  float b2 = $(big(cpu(m[2].bias)[1]));
-  float b3 = $(big(cpu(m[3].bias)[1]));
-  """
+      $(big(x_scale)),
+      $(big(x_mean)),
+  
+      $(big(y_scale)),
+      $(big(y_mean)),
+    },
+"""
 end
 
 function models_to_c(ms)
-  
+"""
+  #include <vector>
+  #include <string>
+
+  struct layer
+  {
+    std::vector<float> weights;
+    float bias;
+    std::string activation;
+  };
+
+  struct model
+  {
+    std::vector<layer> layers;
+    float x_scale;
+    float x_mean;
+    float y_scale;
+    float y_mean;
+  };
+
+  std::vector<model> models = 
+  {
+$(join([model_to_c(m) for m in ms]))
+  };
+"""
 end

@@ -43,8 +43,8 @@ x ./= x_scale
 
 plt(x, "Input") |> display
 
-# outpath = "data/BrianMay"
-outpath = "data/marshall bluesbreaker 1962"
+outpath = "data/BrianMay"
+# outpath = "data/marshall bluesbreaker 1962"
 # outpath = "data/nam_example"
 
 y, fs_y = WAV.wavread("$(outpath)/nam_training_output.wav")
@@ -85,23 +85,6 @@ y = DSP.filt(f, y)
 
 AmpModeling.offset(x::Function) = 0
 
-function model_to_c(m, prefix = "tacklebox")
-  """
-  float $(prefix)_x_scale = $(x_scale);
-  float $(prefix)_x_mean = $(x_mean);
-  float $(prefix)_y_scale = $(y_scale);
-  float $(prefix)_y_mean = $(y_mean);
-
-  float w1[] = { $(join(cpu(m[1].weight), ", ")) };
-  float w2[] = { $(join(cpu(m[2].weight), ", ")) };
-  float w3[] = { $(join(cpu(m[3].weight), ", ")) };
-
-  float b1 = $(big(cpu(m[1].bias)[1]));
-  float b2 = $(big(cpu(m[2].bias)[1]));
-  float b3 = $(big(cpu(m[3].bias)[1]));
-  """
-end
-
 function dist(x)
   x0 = x[2:end,:,:]
   x1 = x[1:(end-1),:,:]
@@ -115,6 +98,7 @@ function double_weights(weights, noise_scale = 1f-3)
 end
 
 m = Flux.Chain(
+    Flux.Conv((2^2,), 1 => 1, Flux.tanh),
     Flux.Conv((2^2,), 1 => 1, Flux.tanh),
     Flux.Conv((2^3,), 1 => 1, Flux.tanh),
     Flux.Conv((2^4,), 1 => 1)
@@ -175,14 +159,15 @@ for stage in 1:6
     m = Flux.Chain(
       Flux.Conv(double_weights(m[1].weight), m[1].bias, Flux.tanh),
       Flux.Conv(double_weights(m[2].weight), m[2].bias, Flux.tanh),
-      Flux.Conv(double_weights(m[3].weight), m[3].bias),
+      Flux.Conv(double_weights(m[3].weight), m[3].bias, Flux.tanh),
+      Flux.Conv(double_weights(m[4].weight), m[4].bias),
     ) |> dev
     # m = Flux.Chain(Flux.Conv(cat(m[1].weight, 1f-3 .* Statistics.std(m[1].weight)0 .* randn(Float32, size(m[1].weight)...), dims=1), m[1].bias), m[2], m[3],  Flux.Conv(cat(m[4].weight, 1f-20 .* randn(Float32, size(m[4].weight)...), dims=1), m[4].bias)) |> dev
   else
     m = Flux.Chain(
       m[1],
       m[2],
-      Flux.Conv(double_weights(m[3].weight), m[3].bias)
+      Flux.Conv(double_weights(m[4].weight), m[4].bias)
     ) |> dev
      # m = Flux.Chain(m[1], m[2], m[3],  Flux.Conv(cat(m[4].weight, 1f-30 .* randn(Float32, size(m[4].weight)...), dims=1), m[4].bias)) |> dev
   end
