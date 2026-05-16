@@ -95,7 +95,7 @@ function extend_model(m, noise_scale = 1f-3)
 end
 
 m_min = Flux.Chain(
-    Flux.Conv((2^2,), 1 => 1, Flux.tanh),
+    # Flux.Conv((2^2,), 1 => 1, Flux.tanh),
     Flux.Conv((2^2,), 1 => 1, Flux.tanh),
     Flux.Conv((2^3,), 1 => 1, Flux.tanh),
     Flux.Conv((2^4,), 1 => 1)
