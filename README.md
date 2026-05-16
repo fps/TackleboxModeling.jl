@@ -22,7 +22,7 @@ Here the 1D-convolutions take on the role of the tone shaping stages and the tan
 
 This architecture allows an efficient implementation in a plugin using partitioned convolution (about 1/10 of the processing load compared to standard NAMs). 
 
-The code is flexible enough to add additional stages which can be useful for higher gain models//.
+The code is flexible enough to add additional stages which can be useful for higher gain models.
 
 The two main parts of this software are:
 
@@ -133,6 +133,7 @@ meson compile -vC build
 - Implement noise-free model switching in the LV2 plugin
 - Improve the training code from being a stinking pile of poop to something reusable
 - Implement time-distributed partitioned convolution to make the plugin more efficient
+- Add audio level calibration info to the models
 
 # License
 
