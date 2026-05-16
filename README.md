@@ -134,6 +134,7 @@ meson compile -vC build
 - Improve the training code from being a stinking pile of poop to something reusable
 - Implement time-distributed partitioned convolution to make the plugin more efficient
 - Add audio level calibration info to the models
+- Evaluate cheaper to compute nonlinearity (cheaper than tanh)
 
 # License
 
