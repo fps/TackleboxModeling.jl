@@ -81,6 +81,14 @@ BrianMay (NAM)
 BrianMay (Tacklebox)
 </p>
 
+<p>
+<video controls width="300" height="50">
+  <source src="examples/BrianMay/oversampled_Take1_Audio 1-1_short.wav" type="audio/mpeg">
+  Your browser does not support the video tag.
+</video>
+BrianMay (Tacklebox, 8x oversampled tanh)
+</p>
+
 This code is just a proof of concept.
 
 # Building the plugin
