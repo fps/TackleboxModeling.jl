@@ -89,6 +89,30 @@ BrianMay (Tacklebox)
 BrianMay (Tacklebox, 8x oversampled tanh)
 </p>
 
+<p>
+<video controls width="300" height="50">
+  <source src="examples/BrianMay/nam_sweep.wav" type="audio/mpeg">
+  Your browser does not support the video tag.
+</video>
+BrianMay sweep (NAM)
+</p>
+
+<p>
+<video controls width="300" height="50">
+  <source src="examples/BrianMay/sweep.wav" type="audio/mpeg">
+  Your browser does not support the video tag.
+</video>
+BrianMay - sweep (Tacklebox)
+</p>
+
+<p>
+<video controls width="300" height="50">
+  <source src="examples/BrianMay/oversampled_sweep.wav" type="audio/mpeg">
+  Your browser does not support the video tag.
+</video>
+BrianMay - sweep (Tacklebox, 8x oversampled tanh)
+</p>
+
 This code is just a proof of concept.
 
 # Building the plugin
