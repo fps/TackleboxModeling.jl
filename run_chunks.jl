@@ -78,11 +78,18 @@ offset(x::Function) = 0
 offset(c::Flux.Conv) = size(c.weight, 1) - 1
 offset(c::Flux.Chain) = sum([offset(l) for l in m])
 
-function dist(x)
+function dist_aa(x)
   x0 = x[2:end,:,:]
   x1 = x[1:(end-1),:,:]
   (x0 .+ x1) ./ (sqrt.(1 .+ x0.^2) .+ sqrt.(1 .+ x1.^2))
 end
+
+
+# dist(x) = x / (1 + abs(x))
+dist(x) = x / sqrt(1 + x^2)
+
+# activation = Flux.tanh
+activation = dist
 
 function extend_weights(weights, noise_scale = 1f-3)
   c = noise_scale .* Statistics.std(weights) .* randn(Float32, size(weights, 1) + 1, 1, 1)
@@ -91,13 +98,13 @@ function extend_weights(weights, noise_scale = 1f-3)
 end
 
 function extend_model(m, noise_scale = 1f-3)
-  Flux.Chain([Flux.Conv(extend_weights(l.weight), l.bias, Flux.tanh) for l in m[1:(end-1)]]..., Flux.Conv(extend_weights(m[end].weight), m[end].bias))
+  Flux.Chain([Flux.Conv(extend_weights(l.weight), l.bias, activation) for l in m[1:(end-1)]]..., Flux.Conv(extend_weights(m[end].weight), m[end].bias))
 end
 
 m_min = Flux.Chain(
-    # Flux.Conv((2^2,), 1 => 1, Flux.tanh),
-    Flux.Conv((2^2,), 1 => 1, Flux.tanh),
-    Flux.Conv((2^3,), 1 => 1, Flux.tanh),
+    # Flux.Conv((2^2,), 1 => 1, activation),
+    Flux.Conv((2^2,), 1 => 1, activation),
+    Flux.Conv((2^3,), 1 => 1, activation),
     Flux.Conv((2^4,), 1 => 1)
 ) |> dev
 
@@ -211,25 +218,6 @@ for stage in 1:6
           # noise = 1f-8 .+ dev(randn(Float32, size(y)...))
           loss, grad = Flux.withgradient(m) do m
               y_hat = m(x) 
-              # y_hat += noise
-      
-              # fy_hat = abs.(basis * (window .* circshift(y_hat, (shift1, 0))))
-              # fy = abs.(basis * (window .* circshift(y[:,1,:], (shift1, 0)))) 
-      
-              # fy_hat = abs.(basis * (window .* y_hat))
-              # fy = abs.(basis * (window .* y[:,1,:]))
-      
-              # fy_hat = abs.(basis * y_hat) ./ fft_size
-              # fy = abs.(basis * y[:,1,:]) ./ fft_size
-      
-              #=
-              fym = Statistics.mean(fy)
-      
-              fy = fy ./ fym
-              fy_hat = fy_hat ./ fym
-              =#
-      
-              # Flux.mse(fy_hat, fy) ./ Statistics.mean(fy.^2) + 1f-2 * Statistics.mean(y_hat)^2
               stft_loss(overlap, bases, fft_sizes, y, y_hat) + Statistics.mean(y_hat).^2
           end
           Flux.update!(opt, m, grad[1])
@@ -264,13 +252,5 @@ for stage in 1:6
   end
 end
   
-include("write_test_output.jl")
+# include("write_test_output.jl")
 
-#=
-@info "Writing test file in $(outpath),,,"
-
-test_out = m_min(dev(test ./ x_scale)[:,:,:])[:] .* y_scale |> cpu
-test_out = cat(zeros(Float32, m_offset), test_out, dims=1)
-WAV.wavwrite(test_out, "$(outpath)/test_$(test_file_name).wav"; Fs=fs_x)
-
-=#
