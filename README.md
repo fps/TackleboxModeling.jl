@@ -98,6 +98,7 @@ meson compile -vC build
 
 - Try oversampling for the non-linearity in the plugin and check whether that alters the sound too much
 - Implement better model selection in the LV2 plugin
+- Implement noise-free model switching in the LV2 plugin
 - Improve the training code from being a stinking pile of poop to something reusable
 - Implement time-distributed partitioned convolution to make the plugin more efficient
 
