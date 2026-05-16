@@ -74,10 +74,6 @@ plt(test, "Test") |> display
 
 @info "Setting up model..."
 
-offset(x::Function) = 0
-offset(c::Flux.Conv) = size(c.weight, 1) - 1
-offset(c::Flux.Chain) = sum([offset(l) for l in m])
-
 function dist_aa(x)
   x0 = x[2:end,:,:]
   x1 = x[1:(end-1),:,:]
@@ -89,7 +85,7 @@ end
 dist(x) = x / sqrt(1 + x^2)
 
 # activation = Flux.tanh
-activation = dist
+activation = dist_aa
 
 function extend_weights(weights, noise_scale = 1f-3)
   c = noise_scale .* Statistics.std(weights) .* randn(Float32, size(weights, 1) + 1, 1, 1)
@@ -98,15 +94,20 @@ function extend_weights(weights, noise_scale = 1f-3)
 end
 
 function extend_model(m, noise_scale = 1f-3)
-  Flux.Chain([Flux.Conv(extend_weights(l.weight), l.bias, activation) for l in m[1:(end-1)]]..., Flux.Conv(extend_weights(m[end].weight), m[end].bias))
+  Flux.Chain([Flux.Chain(Flux.Conv(extend_weights(l[1].weight), l[1].bias), activation) for l in m[1:(end-1)]]..., Flux.Conv(extend_weights(m[end].weight), m[end].bias))
 end
 
 m_min = Flux.Chain(
     # Flux.Conv((2^2,), 1 => 1, activation),
-    Flux.Conv((2^2,), 1 => 1, activation),
-    Flux.Conv((2^3,), 1 => 1, activation),
+    Flux.Chain(Flux.Conv((2^2,), 1 => 1), activation),
+    Flux.Chain(Flux.Conv((2^3,), 1 => 1), activation),
     Flux.Conv((2^4,), 1 => 1)
 ) |> dev
+
+#offset(x::Function) = 0
+offset(x::typeof(dist_aa)) = 1
+offset(c::Flux.Conv) = size(c.weight, 1) - 1
+offset(c::Flux.Chain) = sum([offset(l) for l in c])
 
 @info "m_min: $m_min"
 @info "offset(m_min): $(offset(m_min))"
