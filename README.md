@@ -31,6 +31,10 @@ The two main parts of this software are:
 
 The models which are included with the plugin have been trained on input/output pairs produced by neural amp modeller (NAM) models. So they are "2nd-generation models" ;) To my ears they sound quite similar on my little test snippet. You can find them in the data/ folder in the respective model subdirectory (the prefix "nam_" denotes the audio files rendered by NAM. the "test_" prefix denotes the audio files rendered by the tacklebox).
 
+<video controls width="300" height="50">
+  <source src="examples/BrianMay/nam_Take1_Audio 1-1_short.wav" type="audio/mpeg">
+  Your browser does not support the video tag.
+</video>
 [BrianMay (NAM)](examples/BrianMay/nam_Take1_Audio 1-1_short.wav)
 
 This code is just a proof of concept.
