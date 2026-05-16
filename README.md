@@ -1,6 +1,6 @@
 This software is in part inspired by Jim Lil's excellent "where does the tone come from..." series of videos. Especially his video titled "Tested: Where Does The Tone Come From In A Guitar Amplifier?" which you can watch here:
 
-https://www.youtube.com/watch?v=wcBEOcPtlYk
+[https://www.youtube.com/watch?v=wcBEOcPtlYk](https://www.youtube.com/watch?v=wcBEOcPtlYk)
 
 In this video Jim belabors the point that most common amplifiers can be broken down into three tone shaping stages, each possibly followed by a non-linearity:
 
@@ -29,7 +29,7 @@ The two main parts of this software are:
 - Julia code to train a model. It uses CUDA.jl and cuDNN.jl in tandem with Flux.jl to perform the training on a GPU.
 - A simple LV2 plugin that allows the user to select one of the previously trained models. It would be easy to add model parameter loading from an e.g. JSON file but I don't need it. PRs welcome though.
 
-The models which are included with the plugin have been trained on input/output pairs produced by neural amp modeller (NAM) models. So they are "2nd-generation models" ;) To my ears they sound quite similar on my little test snippet. You can find them in the examples/ folder in the respective model subdirectory (the prefix "nam_" denotes the audio files rendered by NAM. the "test_" prefix denotes the audio files rendered by the tacklebox). You should get playable links below if you visit the [github pages version of this repository](https://fps.github.io/TackleboxModeling.jl).
+The models which are included with the plugin have been trained on input/output pairs produced by neural amp modeller (NAM) models. So they are "2nd-generation models" ;) To my ears they sound quite similar on my little test snippet. You can find them in the examples/ folder in the respective model subdirectory (the prefix "nam_" denotes the audio files rendered by NAM. the "test_" prefix denotes the audio files rendered by the tacklebox). You should get playable links below if you visit the github pages version of this repository [https://fps.github.io/TackleboxModeling.jl](https://fps.github.io/TackleboxModeling.jl).
 
 <p>
 <video controls width="300" height="50">
