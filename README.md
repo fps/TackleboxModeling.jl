@@ -31,6 +31,34 @@ The two main parts of this software are:
 
 The models which are included with the plugin have been trained on input/output pairs produced by neural amp modeller (NAM) models. So they are "2nd-generation models" ;) To my ears they sound quite similar on my little test snippet. You can find them in the examples/ folder in the respective model subdirectory (the prefix "nam_" denotes the audio files rendered by NAM. the "test_" prefix denotes the audio files rendered by the tacklebox). You should get a playable link here if you visit the [github pages version of this repository](https://fps.github.io/TackleboxModeling.jl).
 
+<p>Fender Deluxe Reverb (NAM)
+<video controls width="300" height="50">
+  <source src="examples/Fender Deluxe Reverb/nam_Take1_Audio 1-1_short.wav" type="audio/mpeg">
+  Your browser does not support the video tag.
+</video>
+</p>
+
+<p>Fender Deluxe Reverb (Tacklebox)
+<video controls width="300" height="50">
+  <source src="examples/Fender Deluxe Reverb/test_Take1_Audio 1-1_short.wav" type="audio/mpeg">
+  Your browser does not support the video tag.
+</video>
+</p>
+
+<p>marshall bluesbreaker 1962 (NAM)
+<video controls width="300" height="50">
+  <source src="examples/marshall bluesbreaker 1962/nam_Take1_Audio 1-1_short.wav" type="audio/mpeg">
+  Your browser does not support the video tag.
+</video>
+</p>
+
+<p>marshall bluesbreaker 1962 (Tacklebox)
+<video controls width="300" height="50">
+  <source src="examples/marshall bluesbreaker 1962/test_Take1_Audio 1-1_short.wav" type="audio/mpeg">
+  Your browser does not support the video tag.
+</video>
+</p>
+
 <p>BrianMay (NAM)
 <video controls width="300" height="50">
   <source src="examples/BrianMay/nam_Take1_Audio 1-1_short.wav" type="audio/mpeg">
