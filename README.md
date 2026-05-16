@@ -29,48 +29,54 @@ The two main parts of this software are:
 - Julia code to train a model. It uses CUDA.jl and cuDNN.jl in tandem with Flux.jl to perform the training on a GPU.
 - A simple LV2 plugin that allows the user to select one of the previously trained models. It would be easy to add model parameter loading from an e.g. JSON file but I don't need it. PRs welcome though.
 
-The models which are included with the plugin have been trained on input/output pairs produced by neural amp modeller (NAM) models. So they are "2nd-generation models" ;) To my ears they sound quite similar on my little test snippet. You can find them in the examples/ folder in the respective model subdirectory (the prefix "nam_" denotes the audio files rendered by NAM. the "test_" prefix denotes the audio files rendered by the tacklebox). You should get a playable link here if you visit the [github pages version of this repository](https://fps.github.io/TackleboxModeling.jl).
+The models which are included with the plugin have been trained on input/output pairs produced by neural amp modeller (NAM) models. So they are "2nd-generation models" ;) To my ears they sound quite similar on my little test snippet. You can find them in the examples/ folder in the respective model subdirectory (the prefix "nam_" denotes the audio files rendered by NAM. the "test_" prefix denotes the audio files rendered by the tacklebox). You should get playable links below if you visit the [github pages version of this repository](https://fps.github.io/TackleboxModeling.jl).
 
-<p>Fender Deluxe Reverb (NAM)
+<p>
 <video controls width="300" height="50">
   <source src="examples/Fender Deluxe Reverb/nam_Take1_Audio 1-1_short.wav" type="audio/mpeg">
   Your browser does not support the video tag.
 </video>
+Fender Deluxe Reverb (NAM)
 </p>
 
-<p>Fender Deluxe Reverb (Tacklebox)
+<p>
 <video controls width="300" height="50">
   <source src="examples/Fender Deluxe Reverb/test_Take1_Audio 1-1_short.wav" type="audio/mpeg">
   Your browser does not support the video tag.
 </video>
+Fender Deluxe Reverb (Tacklebox)
 </p>
 
-<p>marshall bluesbreaker 1962 (NAM)
+<p>
 <video controls width="300" height="50">
   <source src="examples/marshall bluesbreaker 1962/nam_Take1_Audio 1-1_short.wav" type="audio/mpeg">
   Your browser does not support the video tag.
 </video>
+marshall bluesbreaker 1962 (NAM)
 </p>
 
-<p>marshall bluesbreaker 1962 (Tacklebox)
+<p>
 <video controls width="300" height="50">
   <source src="examples/marshall bluesbreaker 1962/test_Take1_Audio 1-1_short.wav" type="audio/mpeg">
   Your browser does not support the video tag.
 </video>
+marshall bluesbreaker 1962 (Tacklebox)
 </p>
 
-<p>BrianMay (NAM)
+<p>
 <video controls width="300" height="50">
   <source src="examples/BrianMay/nam_Take1_Audio 1-1_short.wav" type="audio/mpeg">
   Your browser does not support the video tag.
 </video>
+BrianMay (NAM)
 </p>
 
-<p>BrianMay (Tacklebox)
+<p>
 <video controls width="300" height="50">
   <source src="examples/BrianMay/test_Take1_Audio 1-1_short.wav" type="audio/mpeg">
   Your browser does not support the video tag.
 </video>
+BrianMay (Tacklebox)
 </p>
 
 This code is just a proof of concept.
