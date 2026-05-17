@@ -109,8 +109,7 @@ end
 
 m_min = Flux.Chain(
     Flux.Chain(Flux.Conv((2^2,), 1 => 1), activation),
-    Flux.Chain(Flux.Conv((2^2,), 1 => 1), activation),
-    Flux.Chain(Flux.Conv((2^2,), 1 => 1), activation),
+    Flux.Chain(Flux.Conv((2^3,), 1 => 1), activation),
     Flux.Chain(Flux.Conv((2^3,), 1 => 1), activation),
     Flux.Chain(Flux.Conv((2^4,), 1 => 1))
 ) |> dev
@@ -143,7 +142,7 @@ fwindows = map(fft_size -> DSP.Windows.hann(div(fft_size, 2)), fft_sizes) |> dev
 
 function stft(x); basis * (x .* window); end
 
-lr = 5e-3
+lr = 2e-3
 
 n_epochs = 100
 
@@ -176,7 +175,7 @@ for stage in 1:6
   global m_min
   global lr
 
-  lr *= 0.9
+  # lr *= 0.9
 
   m = extend_model(m_min) |> dev
 
