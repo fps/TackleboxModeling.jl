@@ -1,3 +1,6 @@
 [submodule "FFTConvolver"]
 	path = FFTConvolver
 	url = https://github.com/HiFi-LoFi/FFTConvolver.git
+[submodule "hiir"]
+	path = hiir
+	url = https://github.com/unevens/hiir.git
