@@ -103,10 +103,9 @@ namespace tacklebox
         float const x1_2 = x1 * x1;
 
         upsampled_output_buffer[index] = (x0 + x1) / (sqrtf(1 + x0_2) + sqrtf(1 + x1_2));
-        current_buffer = next_buffer();
       }
 
-      downsamplers[layer].process_block(in_buffer.data(), upsampled_output_buffer.data(), 2 * nframes);
+      downsamplers[layer].process_block(in_buffer.data(), upsampled_output_buffer.data(), nframes);
     }
 
     inline void process_layer(int const layer, int const nframes)
@@ -172,7 +171,7 @@ namespace tacklebox
     {
       std::cout << "processor()...\n";
 
-      hiir::PolyphaseIir2Designer::compute_coefs_spec_order_tbw (iir_coeffs.data(), n_iir_coeffs, 0.24);
+      hiir::PolyphaseIir2Designer::compute_coefs_spec_order_tbw (iir_coeffs.data(), n_iir_coeffs, 0.4);
   
       for (size_t index = 0; index < m.layers.size(); ++index)
       {

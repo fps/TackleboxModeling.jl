@@ -128,13 +128,13 @@ meson compile -vC build
 
 # TODOs / Limitations
 
-- Try oversampling for the non-linearity in the plugin and check whether that alters the sound too much
+- Try oversampling for the non-linearity in the plugin and check whether that alters the sound too much (done: it doesn't. Implemented: 2x oversampling in combibation with anti-derivative antialiasing)
 - Implement better model selection in the LV2 plugin
 - Implement noise-free model switching in the LV2 plugin
 - Improve the training code from being a stinking pile of poop to something reusable
 - Implement time-distributed partitioned convolution to make the plugin more efficient
 - Add audio level calibration info to the models
-- Evaluate cheaper to compute nonlinearity (cheaper than tanh)
+- Evaluate cheaper to compute nonlinearity (cheaper than tanh) (done: x / sqrt(1 + x^2))
 
 # License
 

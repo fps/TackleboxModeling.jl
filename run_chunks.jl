@@ -44,7 +44,8 @@ x ./= x_scale
 
 plt(x, "Input") |> display
 
-outpath = "data/BrianMay"
+outpath = "data/EVH 5150"
+# outpath = "data/BrianMay"
 # outpath = "data/Fender Deluxe Reverb"
 # outpath = "data/marshall bluesbreaker 1962"
 # outpath = "data/nam_example"
@@ -88,12 +89,13 @@ function dist_aa(x)
   (x0 .+ x1) ./ (sqrt.(1 .+ x0_2) .+ sqrt.(1 .+ x1_2))
 end
 
+dist_tanh(x) = Flux.tanh.(x)
 
 # dist(x) = x / (1 + abs(x))
 dist(x) = x / sqrt(1 + x^2)
 
-# activation = Flux.tanh
-activation = dist_aa
+activation = dist_tanh
+# activation = dist_aa
 
 function extend_weights(weights, noise_scale = 1f-3)
   c = noise_scale .* Statistics.std(weights) .* randn(Float32, size(weights, 1) + 1, 1, 1)
@@ -106,7 +108,8 @@ function extend_model(m, noise_scale = 1f-3)
 end
 
 m_min = Flux.Chain(
-    # Flux.Conv((2^2,), 1 => 1, activation),
+    Flux.Chain(Flux.Conv((2^2,), 1 => 1), activation),
+    Flux.Chain(Flux.Conv((2^2,), 1 => 1), activation),
     Flux.Chain(Flux.Conv((2^2,), 1 => 1), activation),
     Flux.Chain(Flux.Conv((2^3,), 1 => 1), activation),
     Flux.Chain(Flux.Conv((2^4,), 1 => 1))
@@ -140,13 +143,13 @@ fwindows = map(fft_size -> DSP.Windows.hann(div(fft_size, 2)), fft_sizes) |> dev
 
 function stft(x); basis * (x .* window); end
 
-lr = 2e-3
+lr = 5e-3
 
 n_epochs = 100
 
 loss_min = 1f10
 
-patience = 2^3
+patience = 2^7
 
 min_epoch = 1
 
@@ -171,6 +174,9 @@ train_losses = []
 for stage in 1:6
   global m
   global m_min
+  global lr
+
+  lr *= 0.9
 
   m = extend_model(m_min) |> dev
 
