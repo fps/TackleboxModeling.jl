@@ -1,10 +1,19 @@
+function activation_to_c(a)
+  if a == Flux.tanh
+    return "\"tanh\","
+  end
+  if a == dist_aa
+    return "\"dist_aa\","
+  end
+  "\"nothing\","
+end
 
 function layer_to_c(l)
 """
         {
-          { $(join(big.(cpu(l.weight)), ", ")) },
-          $(big(cpu(l.bias)[1])),
-          $(if l.σ == Flux.tanh; "\"tanh\""; else "\"nothing\""; end),
+          { $(join(big.(cpu(l[1].weight)), ", ")) },
+          $(big(cpu(l[1].bias)[1])),
+          $(if length(l) > 1; activation_to_c(l[2]); else; "\"nothing\""; end)
         },
 """
 end

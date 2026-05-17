@@ -74,10 +74,18 @@ plt(test, "Test") |> display
 
 @info "Setting up model..."
 
+# See: Note on Alias Suppression in Digital Distortion, Martin Vicanek
 function dist_aa(x)
-  x0 = x[2:end,:,:]
-  x1 = x[1:(end-1),:,:]
-  (x0 .+ x1) ./ (sqrt.(1 .+ x0.^2) .+ sqrt.(1 .+ x1.^2))
+  x0 = @view x[2:end,:,:]
+  x1 = @view x[1:(end-1),:,:]
+
+  x_2 = x.^2
+  
+  # y u no fastah?
+  x0_2 = @view x_2[2:end,:,:]
+  x1_2 = @view x_2[1:(end-1),:,:]
+
+  (x0 .+ x1) ./ (sqrt.(1 .+ x0_2) .+ sqrt.(1 .+ x1_2))
 end
 
 
@@ -94,14 +102,14 @@ function extend_weights(weights, noise_scale = 1f-3)
 end
 
 function extend_model(m, noise_scale = 1f-3)
-  Flux.Chain([Flux.Chain(Flux.Conv(extend_weights(l[1].weight), l[1].bias), activation) for l in m[1:(end-1)]]..., Flux.Conv(extend_weights(m[end].weight), m[end].bias))
+  Flux.Chain([Flux.Chain(Flux.Conv(extend_weights(l[1].weight), l[1].bias), activation) for l in m[1:(end-1)]]..., Flux.Chain(Flux.Conv(extend_weights(m[end][1].weight), m[end][1].bias)))
 end
 
 m_min = Flux.Chain(
     # Flux.Conv((2^2,), 1 => 1, activation),
     Flux.Chain(Flux.Conv((2^2,), 1 => 1), activation),
     Flux.Chain(Flux.Conv((2^3,), 1 => 1), activation),
-    Flux.Conv((2^4,), 1 => 1)
+    Flux.Chain(Flux.Conv((2^4,), 1 => 1))
 ) |> dev
 
 #offset(x::Function) = 0
