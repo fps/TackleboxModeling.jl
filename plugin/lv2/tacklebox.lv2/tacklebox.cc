@@ -45,7 +45,7 @@ static LV2_Handle instantiate(const LV2_Descriptor * d, double x, const char *c,
 { 
     std::cout << "instantiate...\n";
   return (LV2_Handle) new Tacklebox; }
-static void cleanup(LV2_Handle instance) { delete (Tacklebox*)instance; }
+static void cleanup(LV2_Handle instance) { std::cout << "cleanup...\n"; delete (Tacklebox*)instance; }
 
 static void
 connect_port(LV2_Handle instance,
