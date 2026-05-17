@@ -69,7 +69,7 @@ namespace tacklebox
         upsampled_input_buffer[index] = tanhf(upsampled_input_buffer[index] + bias);
       }
 
-      downsamplers[layer].process_block(in_buffer.data(), upsampled_input_buffer.data(), 2 * nframes);
+      downsamplers[layer].process_block(in_buffer.data(), upsampled_input_buffer.data(), nframes);
     }
 
     inline void dist_aa_activation(int const layer, int const nframes, float const bias)

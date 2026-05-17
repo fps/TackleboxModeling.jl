@@ -1,5 +1,5 @@
 function activation_to_c(a)
-  if a == Flux.tanh
+  if a == dist_tanh
     return "\"tanh\","
   end
   if a == dist_aa
