@@ -5,6 +5,9 @@ function activation_to_c(a)
   if a == dist_aa
     return "\"dist_aa\","
   end
+  if a == dist_aa2
+    return "\"dist_aa2\","
+  end
   "\"nothing\","
 end
 

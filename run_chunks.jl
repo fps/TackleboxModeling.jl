@@ -34,6 +34,8 @@ x, fs_x = WAV.wavread("data/nam_training_input.wav")
 # x, fs_x = WAV.wavread("data/noise_input.wav")
 # x = x[1:(div(size(x, 1), chunksize) * chunksize)]
 
+x = Float32.(x)
+
 x_mean = Statistics.mean(x)
 x .-= x_mean
 x_scale = Statistics.std(x)
@@ -53,6 +55,8 @@ outpath = "data/EVH 5150"
 y, fs_y = WAV.wavread("$(outpath)/nam_training_output.wav")
 # y, fs_y = WAV.wavread("$(outpath)/nam_Take1_Audio 1-1_shorter_0.5.wav")
 # y, fs_y = WAV.wavread("$(outpath)/noise_output.wav")
+
+y = Float32.(y)
 y = y[1:size(x,1)]
 
 y_mean = Statistics.mean(y)
@@ -76,6 +80,18 @@ plt(test, "Test") |> display
 @info "Setting up model..."
 
 # See: Note on Alias Suppression in Digital Distortion, Martin Vicanek
+function dist_aa2(x)
+  x0 = @view x[3:end,:,:]
+  x1 = @view x[2:(end-1),:,:]
+  x2 = @view x[1:(end-2),:,:]
+
+  F1 = sqrt.(1 .+ x1.^2)
+  F12 = sqrt.(1 .+ ((x0 + x1)./2).^2)
+  F23 = sqrt.(1 .+ ((x1 + x2)./2).^2)
+
+  ((x0 .+ 3 .* x1) ./ (F12 .+ F1) .+ (x2 .+ 3 .* x1) ./ (F23 .+ F1)) ./ 4
+end
+
 function dist_aa(x)
   x0 = @view x[2:end,:,:]
   x1 = @view x[1:(end-1),:,:]
@@ -95,7 +111,7 @@ dist_tanh(x) = Flux.tanh.(x)
 dist(x) = x / sqrt(1 + x^2)
 
 # activation = dist_tanh
-activation = dist_aa
+activation = dist_aa2
 
 function extend_weights(weights, noise_scale = 1f-3)
   c = noise_scale .* Statistics.std(weights) .* randn(Float32, size(weights, 1) + 1, 1, 1)
@@ -108,15 +124,16 @@ function extend_model(m, noise_scale = 1f-3)
 end
 
 m_min = Flux.Chain(
+    # Flux.Chain(Flux.Conv((2^2,), 1 => 1), activation),
     Flux.Chain(Flux.Conv((2^2,), 1 => 1), activation),
     Flux.Chain(Flux.Conv((2^2,), 1 => 1), activation),
-    Flux.Chain(Flux.Conv((2^3,), 1 => 1), activation),
     Flux.Chain(Flux.Conv((2^3,), 1 => 1), activation),
     Flux.Chain(Flux.Conv((2^4,), 1 => 1))
 ) |> dev
 
 #offset(x::Function) = 0
 offset(x::typeof(dist_aa)) = 1
+offset(x::typeof(dist_aa2)) = 2
 offset(x::typeof(dist_tanh)) = 0
 offset(c::Flux.Conv) = size(c.weight, 1) - 1
 offset(c::Flux.Chain) = sum([offset(l) for l in c])
