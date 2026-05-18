@@ -94,8 +94,8 @@ dist_tanh(x) = Flux.tanh.(x)
 # dist(x) = x / (1 + abs(x))
 dist(x) = x / sqrt(1 + x^2)
 
-activation = dist_tanh
-# activation = dist_aa
+# activation = dist_tanh
+activation = dist_aa
 
 function extend_weights(weights, noise_scale = 1f-3)
   c = noise_scale .* Statistics.std(weights) .* randn(Float32, size(weights, 1) + 1, 1, 1)
@@ -104,10 +104,11 @@ function extend_weights(weights, noise_scale = 1f-3)
 end
 
 function extend_model(m, noise_scale = 1f-3)
-  Flux.Chain([Flux.Chain(Flux.Conv(extend_weights(l[1].weight), l[1].bias), activation) for l in m[1:(end-1)]]..., Flux.Chain(Flux.Conv(extend_weights(m[end][1].weight), m[end][1].bias)))
+  Flux.Chain([Flux.Chain(Flux.Conv(extend_weights(l[1].weight, noise_scale), l[1].bias), activation) for l in m[1:(end-1)]]..., Flux.Chain(Flux.Conv(extend_weights(m[end][1].weight, noise_scale), m[end][1].bias)))
 end
 
 m_min = Flux.Chain(
+    Flux.Chain(Flux.Conv((2^2,), 1 => 1), activation),
     Flux.Chain(Flux.Conv((2^2,), 1 => 1), activation),
     Flux.Chain(Flux.Conv((2^3,), 1 => 1), activation),
     Flux.Chain(Flux.Conv((2^3,), 1 => 1), activation),
@@ -116,6 +117,7 @@ m_min = Flux.Chain(
 
 #offset(x::Function) = 0
 offset(x::typeof(dist_aa)) = 1
+offset(x::typeof(dist_tanh)) = 0
 offset(c::Flux.Conv) = size(c.weight, 1) - 1
 offset(c::Flux.Chain) = sum([offset(l) for l in c])
 
@@ -142,9 +144,10 @@ fwindows = map(fft_size -> DSP.Windows.hann(div(fft_size, 2)), fft_sizes) |> dev
 
 function stft(x); basis * (x .* window); end
 
-lr = 2e-3
+lr_max = 5e-3
 
 n_epochs = 100
+warmup = 10
 
 loss_min = 1f10
 
@@ -152,12 +155,12 @@ patience = 2^7
 
 min_epoch = 1
 
-function stft_loss(overlap, bases, fft_sizes, y, y_hat)
+function stft_loss(n, overlap, bases, fft_sizes, y, y_hat)
   l = 0
 
   n_y_hat = size(y_hat, 1)
 
-  for n in 1:length(bases)  
+  # for n in 1:length(bases)  
     offset = Random.rand(1:(n_y_hat - fft_sizes[n]))
     n_base = size(bases[n], 1)
     fy = abs.(bases[n] * (@view y[(1:fft_sizes[n]) .+ offset, 1, :])) # .* fwindows[n] # ./ dev(reverse((1:n_base)))
@@ -165,15 +168,20 @@ function stft_loss(overlap, bases, fft_sizes, y, y_hat)
 
     l += Flux.mse(fy, fy_hat) ./ Statistics.mean(fy.^2)
     # l += Statistics.mean(abs.(log.(fy) .- log.(fy_hat)))
-  end
+  #end
   l / length(bases)
 end
 
+m_mins = []
+
 train_losses = []
-for stage in 1:6
+for stage in 1:8
   global m
   global m_min
-  global lr
+
+  global m_mins
+
+  lr = lr_max
 
   # lr *= 0.9
 
@@ -212,11 +220,17 @@ for stage in 1:6
   chunked_x = chunked_x[:,:,:] |> dev
   chunked_y = chunked_y[:,:,:] |> dev
   
+  # opt = Flux.setup(Flux.NAdam(lr), m)
   opt = Flux.setup(Flux.Adam(lr), m)
+  # opt = Flux.setup(SurpriseOpt(), m)
+  # opt = Flux.setup(Flux.Momentum(), m)
 
   for epoch in 1:n_epochs
-      if epoch <= 10
-         Flux.adjust!(opt, lr * (epoch / 10))
+      if epoch <= warmup
+        Flux.adjust!(opt, lr * (epoch / warmup))
+      else
+        lr *= 0.98
+        Flux.adjust!(opt, lr)
       end
       
       # if epoch <= 50
@@ -230,9 +244,11 @@ for stage in 1:6
       for (x,y) in Flux.MLUtils.DataLoader((chunked_x, chunked_y), batchsize=batchsize, shuffle=true)
           # print(".")
           # noise = 1f-8 .+ dev(randn(Float32, size(y)...))
+          n = 1 # Random.rand(1:length(bases))
+  
           loss, grad = Flux.withgradient(m) do m
               y_hat = m(x) 
-              stft_loss(overlap, bases, fft_sizes, y, y_hat) + Statistics.mean(y_hat).^2
+              stft_loss(n, overlap, bases, fft_sizes, y, y_hat) + Statistics.mean(y_hat).^2
           end
           Flux.update!(opt, m, grad[1])
           push!(losses, loss)
