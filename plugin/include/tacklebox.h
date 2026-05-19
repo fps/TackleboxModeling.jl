@@ -42,7 +42,8 @@ namespace tacklebox
     std::vector<fftconvolver::FFTConvolver> convolvers;
     std::vector<float> biases;  
     std::vector<std::string> activations;
-    std::vector<float> anti_derivative_buffers;
+    std::vector<float> dist_aa_buffers;
+    std::vector<std::array<float, 2>> dist_aa2_buffers;
     std::array<double, n_iir_coeffs> iir_coeffs;
 
     std::vector<hiir::Upsampler2xFpu<n_iir_coeffs>> upsamplers;
@@ -85,14 +86,14 @@ namespace tacklebox
       {
         if (index == (2 * nframes) - 1)
         {
-          anti_derivative_buffers[layer] = upsampled_input_buffer[index];
+          dist_aa_buffers[layer] = upsampled_input_buffer[index];
         }
 
         const float x0 = upsampled_input_buffer[index] + bias;
         float x1 = 0;
         if (index == 0)
         {
-          x1 = anti_derivative_buffers[layer] + bias;
+          x1 = dist_aa_buffers[layer] + bias;
         }
         else
         {
@@ -163,7 +164,8 @@ namespace tacklebox
       convolvers(m.layers.size()),
       biases(m.layers.size()),
       activations(m.layers.size()),
-      anti_derivative_buffers(m.layers.size(), 0),
+      dist_aa_buffers(m.layers.size(), 0),
+      dist_aa2_buffers(m.layers.size(), {0, 0}),
       upsamplers(m.layers.size()),
       downsamplers(m.layers.size()),
       upsampled_input_buffers(m.layers.size()),
