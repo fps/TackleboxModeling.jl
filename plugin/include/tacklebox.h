@@ -109,6 +109,54 @@ namespace tacklebox
       downsamplers[layer].process_block(in_buffer.data(), upsampled_output_buffer.data(), nframes);
     }
 
+    inline void dist_aa2_activation(int const layer, int const nframes, float const bias)
+    {
+      std::vector<float> & in_buffer = buffers[current_buffer];
+
+      std::vector<float> & upsampled_input_buffer = upsampled_input_buffers[layer];
+      std::vector<float> & upsampled_output_buffer = upsampled_output_buffers[layer];
+
+      upsamplers[layer].process_block(upsampled_input_buffer.data(), in_buffer.data(), nframes);
+
+      for (int index = 0; index < (2 * nframes); ++index)
+      {
+        if (index == (2 * nframes) - 1)
+        {
+          dist_aa2_buffers[layer][0] = upsampled_input_buffer[index-1];
+          dist_aa2_buffers[layer][1] = upsampled_input_buffer[index];
+        }
+
+        const float x0 = upsampled_input_buffer[index] + bias;
+
+        float x1 = 0;
+        float x2 = 0;
+
+        if (index == 0)
+        {
+          x2 = dist_aa2_buffers[layer][0] + bias;
+          x1 = dist_aa2_buffers[layer][1] + bias;
+        }
+        else if (index == 1)
+        {
+          x1 = upsampled_input_buffer[index - 1];
+          x2 = dist_aa2_buffers[layer][1] + bias;
+        }
+        else
+        {
+          x1 = upsampled_input_buffer[index - 1];
+          x2 = upsampled_input_buffer[index - 2];
+        }
+        
+        float const F12 = sqrtf(1.f + ((x0 + x1) / 2.f) * ((x0 + x1) / 2.f));
+        float const F1 = sqrtf(1.f + (x0 * x0));
+        float const F32 = sqrtf(1.f + ((x1 + x2) / 2.f) * ((x1 + x2) / 2.f));
+
+        upsampled_output_buffer[index] = 0.25f * (((x0 + 3 * x1) / (F12 + F1)) + ((3*x1 + x2) / (F1 + F32)));
+      }
+
+      downsamplers[layer].process_block(in_buffer.data(), upsampled_output_buffer.data(), nframes);
+    }
+
     inline void process_layer(int const layer, int const nframes)
     {
       convolvers[layer].process(buffers[current_buffer].data(), buffers[next_buffer()].data(), nframes);
@@ -118,9 +166,13 @@ namespace tacklebox
       {
         tanh_activation(layer, nframes, biases[layer]); 
       }
-      if (activations[layer] == "dist_aa")
+      else if (activations[layer] == "dist_aa")
       {
         dist_aa_activation(layer, nframes, biases[layer]); 
+      }
+      else if (activations[layer] == "dist_aa2")
+      {
+        dist_aa2_activation(layer, nframes, biases[layer]); 
       }
       else
       {
@@ -173,7 +225,7 @@ namespace tacklebox
     {
       std::cout << "processor()...\n";
 
-      hiir::PolyphaseIir2Designer::compute_coefs_spec_order_tbw (iir_coeffs.data(), n_iir_coeffs, 0.4);
+      hiir::PolyphaseIir2Designer::compute_coefs_spec_order_tbw (iir_coeffs.data(), n_iir_coeffs, 0.01);
   
       for (size_t index = 0; index < m.layers.size(); ++index)
       {
