@@ -11,7 +11,7 @@
 
 namespace tacklebox
 {
-  const int n_iir_coeffs = 8;
+  const int n_iir_coeffs = 32;
 
   struct layer
   {
@@ -97,7 +97,7 @@ namespace tacklebox
         }
         else
         {
-          x1 = upsampled_input_buffer[index - 1];
+          x1 = upsampled_input_buffer[index - 1] + bias;
         }
 
         float const x0_2 = x0 * x0;
@@ -126,8 +126,6 @@ namespace tacklebox
           dist_aa2_buffers[layer][1] = upsampled_input_buffer[index];
         }
 
-        const float x0 = upsampled_input_buffer[index] + bias;
-
         float x1 = 0;
         float x2 = 0;
 
@@ -138,20 +136,22 @@ namespace tacklebox
         }
         else if (index == 1)
         {
-          x1 = upsampled_input_buffer[index - 1];
           x2 = dist_aa2_buffers[layer][1] + bias;
+          x1 = upsampled_input_buffer[index - 1] + bias;
         }
         else
         {
-          x1 = upsampled_input_buffer[index - 1];
-          x2 = upsampled_input_buffer[index - 2];
+          x1 = upsampled_input_buffer[index - 1] + bias;
+          x2 = upsampled_input_buffer[index - 2] + bias;
         }
         
+        const float x0 = upsampled_input_buffer[index] + bias;
+
         float const F12 = sqrtf(1.f + ((x0 + x1) / 2.f) * ((x0 + x1) / 2.f));
-        float const F1 = sqrtf(1.f + (x0 * x0));
+        float const F1 = sqrtf(1.f + (x1 * x1));
         float const F32 = sqrtf(1.f + ((x1 + x2) / 2.f) * ((x1 + x2) / 2.f));
 
-        upsampled_output_buffer[index] = 0.25f * (((x0 + 3 * x1) / (F12 + F1)) + ((3*x1 + x2) / (F1 + F32)));
+        upsampled_output_buffer[index] = 0.25f * (((x0 + 3.f*x1) / (F12 + F1)) + ((3.f*x1 + x2) / (F1 + F32)));
       }
 
       downsamplers[layer].process_block(in_buffer.data(), upsampled_output_buffer.data(), nframes);
@@ -225,7 +225,7 @@ namespace tacklebox
     {
       std::cout << "processor()...\n";
 
-      hiir::PolyphaseIir2Designer::compute_coefs_spec_order_tbw (iir_coeffs.data(), n_iir_coeffs, 0.01);
+      hiir::PolyphaseIir2Designer::compute_coefs_spec_order_tbw (iir_coeffs.data(), n_iir_coeffs, 0.05);
   
       for (size_t index = 0; index < m.layers.size(); ++index)
       {
