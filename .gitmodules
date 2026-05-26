@@ -4,3 +4,6 @@
 [submodule "hiir"]
 	path = hiir
 	url = https://github.com/unevens/hiir.git
+[submodule "cascaded_biquad"]
+	path = cascaded_biquad
+	url = https://github.com/fps/cascaded_biquad

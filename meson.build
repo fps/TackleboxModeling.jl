@@ -11,6 +11,6 @@ add_project_arguments('-march=native', language: 'cpp')
 
 fftconvolver = static_library('fftconvolver', [ './FFTConvolver/AudioFFT.cpp', './FFTConvolver/FFTConvolver.cpp', './FFTConvolver/TwoStageFFTConvolver.cpp', './FFTConvolver/Utilities.cpp' ])
 
-local_includes = include_directories('plugin/include', 'FFTConvolver', '.')
+local_includes = include_directories('plugin/include', 'FFTConvolver', 'cascaded_biquad/include', '.')
 
 subdir('plugin')

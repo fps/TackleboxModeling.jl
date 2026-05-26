@@ -5,9 +5,7 @@
 #include <iostream>
 #include <array>
 
-#include <hiir/PolyphaseIir2Designer.h>
-#include <hiir/Upsampler2xFpu.h>
-#include <hiir/Downsampler2xFpu.h>
+#include <oversample.h>
 
 namespace tacklebox
 {
@@ -44,18 +42,17 @@ namespace tacklebox
     std::vector<std::string> activations;
     std::vector<float> dist_aa_buffers;
     std::vector<std::array<float, 2>> dist_aa2_buffers;
-    std::array<double, n_iir_coeffs> iir_coeffs;
 
-    std::vector<hiir::Upsampler2xFpu<n_iir_coeffs>> upsamplers;
-    std::vector<hiir::Downsampler2xFpu<n_iir_coeffs>> downsamplers;
+    std::vector<oversample2x> oversamplers;
 
     std::vector<std::vector<float>> upsampled_input_buffers;
     std::vector<std::vector<float>> upsampled_output_buffers;
 
     inline int next_buffer()
     {
-      return current_buffer % 2;
+      return current_buffer % buffers.size();
     }
+#if 0
   
     inline void tanh_activation(int const layer, int const nframes, float const bias)
     {
@@ -108,6 +105,7 @@ namespace tacklebox
 
       downsamplers[layer].process_block(in_buffer.data(), upsampled_output_buffer.data(), nframes);
     }
+#endif
 
     inline void dist_aa2_activation(int const layer, int const nframes, float const bias)
     {
@@ -116,7 +114,7 @@ namespace tacklebox
       std::vector<float> & upsampled_input_buffer = upsampled_input_buffers[layer];
       std::vector<float> & upsampled_output_buffer = upsampled_output_buffers[layer];
 
-      upsamplers[layer].process_block(upsampled_input_buffer.data(), in_buffer.data(), nframes);
+      oversamplers[layer].upsample(in_buffer.data(), upsampled_input_buffer.data(), nframes);
 
       for (int index = 0; index < (2 * nframes); ++index)
       {
@@ -154,7 +152,7 @@ namespace tacklebox
         upsampled_output_buffer[index] = 0.25f * (((x0 + 3.f*x1) / (F12 + F1)) + ((3.f*x1 + x2) / (F1 + F32)));
       }
 
-      downsamplers[layer].process_block(in_buffer.data(), upsampled_output_buffer.data(), nframes);
+      oversamplers[layer].downsample(upsampled_output_buffer.data(), in_buffer.data(), nframes);
     }
 
     inline void process_layer(int const layer, int const nframes)
@@ -164,11 +162,11 @@ namespace tacklebox
 
       if (activations[layer] == "tanh")
       {
-        tanh_activation(layer, nframes, biases[layer]); 
+        // tanh_activation(layer, nframes, biases[layer]); 
       }
       else if (activations[layer] == "dist_aa")
       {
-        dist_aa_activation(layer, nframes, biases[layer]); 
+        // dist_aa_activation(layer, nframes, biases[layer]); 
       }
       else if (activations[layer] == "dist_aa2")
       {
@@ -176,7 +174,7 @@ namespace tacklebox
       }
       else
       {
-        std::vector<float> out_buffer = buffers[current_buffer];
+        std::vector<float> & out_buffer = buffers[current_buffer];
         for (int index = 0; index < nframes; ++index)
         {
           out_buffer[index] += biases[layer];
@@ -218,26 +216,21 @@ namespace tacklebox
       activations(m.layers.size()),
       dist_aa_buffers(m.layers.size(), 0),
       dist_aa2_buffers(m.layers.size(), {0, 0}),
-      upsamplers(m.layers.size()),
-      downsamplers(m.layers.size()),
+      oversamplers(m.layers.size()),
       upsampled_input_buffers(m.layers.size()),
       upsampled_output_buffers(m.layers.size())
     {
       std::cout << "processor()...\n";
-
-      hiir::PolyphaseIir2Designer::compute_coefs_spec_order_tbw (iir_coeffs.data(), n_iir_coeffs, 0.05);
   
       for (size_t index = 0; index < m.layers.size(); ++index)
       {
+        std::cout << "layer: " << index << "\n";
         convolvers[index].init(blocksize, m.layers[index].weights.data(), m.layers[index].weights.size());
         biases[index] = m.layers[index].bias;
         activations[index] = m.layers[index].activation;
-        upsamplers[index].set_coefs(iir_coeffs.data());
-        downsamplers[index].set_coefs(iir_coeffs.data());
         upsampled_input_buffers[index] = std::vector<float>(2*blocksize);
         upsampled_output_buffers[index] = std::vector<float>(2*blocksize);
       } 
-
 
       std::cout << "done.\n";
     }

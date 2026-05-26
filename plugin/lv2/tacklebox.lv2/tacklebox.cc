@@ -27,6 +27,7 @@ struct Tacklebox
       {
         processors.push_back(tacklebox::processor(models[index], 64));
       }
+      std::cout << "# processors: " << processors.size() << "\n";
     }
 };
 
