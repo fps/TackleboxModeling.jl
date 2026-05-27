@@ -90,12 +90,12 @@ run(LV2_Handle instance, uint32_t n_samples)
   {
     if (n_samples_left >= 64)
     {
-      p.process(input, output, pre_coef, post_coef, 64);
+      p.process(input + (n_samples - n_samples_left), output + (n_samples - n_samples_left), pre_coef, post_coef, 64);
       n_samples_left -= 64;
     }
     else
     {
-      p.process(input, output, pre_coef, post_coef, n_samples_left);
+      p.process(input + (n_samples - n_samples_left), output + (n_samples - n_samples_left), pre_coef, post_coef, n_samples_left);
       n_samples_left -= n_samples_left;
     }
   }
