@@ -27,7 +27,7 @@ The code is flexible enough to add additional stages which can be useful for hig
 The two main parts of this software are:
 
 - Julia code to train a model. It uses CUDA.jl and cuDNN.jl in tandem with Flux.jl to perform the training on a GPU.
-- A simple LV2 plugin that allows the user to select one of the previously trained models. It would be easy to add model parameter loading from an e.g. JSON file but I don't need it. PRs welcome though.
+- A simple LV2 plugin that allows the user to select one of the previously trained models. It would be easy to add model parameter loading from an e.g. JSON file but I don't need it. PRs welcome though. The plugin implements optional 2x oversampling (using a Chebyshev type II interpolation and decimation filter.)
 
 # Examples
 
