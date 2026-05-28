@@ -161,9 +161,15 @@ meson compile -vC build
 
 - Add the `build/plugin/lv2` directory to your `LV2_PATH` or move the `build/plugin/lv2/tacklebox.lv2` directory to a location on your `LV2_PATH`.
 
+# Using the plugin
+
+- Adjust pre/and post gain to your liking
+- Move the model slider between 0 and 1 to switch between the included models
+- Enable 2x oversampling if you so desire by setting the Oversampling control to 1
+
 # TODOs / Limitations
 
-- Try oversampling for the non-linearity in the plugin and check whether that alters the sound too much (done: it doesn't. Implemented: 2x oversampling in combibation with anti-derivative antialiasing)
+- Try oversampling for the non-linearity in the plugin and check whether that alters the sound too much (done: it doesn't. Implemented: 2x oversampling in combination with anti-derivative antialiasing)
 - Implement better model selection in the LV2 plugin
 - Implement noise-free model switching in the LV2 plugin
 - Improve the training code from being a stinking pile of poop to something reusable
@@ -171,6 +177,7 @@ meson compile -vC build
 - Add audio level calibration info to the models
 - Evaluate cheaper to compute nonlinearity (cheaper than tanh) (done: x / sqrt(1 + x^2))
 - Experiment with tone shaping controls between layers
+- Implement model loading from e.g. json-files instead of hardbaking them into the plugin
 
 # License
 
