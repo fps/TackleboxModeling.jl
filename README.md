@@ -34,7 +34,7 @@ The two main parts of this software are:
 
 # Some implementation details
 
-- The loss function used is a windowed Short-Time-Fourier-Transform (STFT) loss. One little non-standard addition is that the window positions are somewhat randomized such that over the course of training every window shift is encountered eventually.
+- The loss function used is a windowed Short-Time-Fourier-Transform (STFT) loss. One little non-standard addition is that the window positions are somewhat randomized such that over the course of training every window shift is encountered eventually. This is very different from e.g. NAM where primarily a per sample difference loss is optimized. The STFT loss just pushes the overall spectrum into the right direction. So null-tests by subtracting the model from the original are meaningless for TackleboxModeling
 - The size of the convolutional layers grows after a number of epochs. This is done in several stages. At the beginning of each stage the size of the convolution kernel is grown by a factor of 2x by convolving the existing kernel with a small random noise kernel of length (current kernel + 1). The 1st entry in the convolution kernel is set to 1. Additionally the learning rate is ramped up to the target learning rate over a number of epochs at the beginning of each stage.
 
 # Examples
