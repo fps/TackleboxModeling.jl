@@ -41,7 +41,7 @@ The two main parts of this software are:
 
 The models which are included with the plugin have been trained on input/output pairs produced by neural amp modeller (NAM) models. So they are "2nd-generation models" ;) To my ears they sound quite similar on my little test snippet. You can find them in the examples/ folder in the respective model subdirectory (the prefix "nam_" denotes the audio files rendered by NAM. the "test_" prefix denotes the audio files rendered by the tacklebox). You should get playable links below if you visit the github pages version of this repository: [https://fps.github.io/TackleboxModeling.jl](https://fps.github.io/TackleboxModeling.jl).
 
-To reproduce these models you will have to download the corresponding .nam files. These are their md5 hashes:
+To reproduce these models you will have to download the corresponding .nam files from [https://tone3000.com](https://tone3000.com). These are their md5 hashes:
 
 ```bash
 e0619b10bd08354d4e1953fc1d0bc104  data/Fender Deluxe Reverb/model.nam
@@ -50,7 +50,7 @@ bef7ef275c9a9a8c33cd097004b7549f  data/BrianMay/model.nam
 9eb7e7d50ccac9f6765a62499613fcf7  data/EVH 5150/model.nam
 ```
 
-You will also need to download the `nam_training_input.wav` file from the neural-amp-modeler site. The file might be called differently originally, but the version I used has this hash:
+You will also need to download the `nam_training_input.wav` file from the neural-amp-modeler docs site [https://neural-amp-modeler.readthedocs.io/en/latest/](https://neural-amp-modeler.readthedocs.io/en/latest/). The file might be called differently originally or there might be a newer version, but the version I used has this hash:
 
 ```bash
 36cd1af62985c2fac3e654333e36431e  data/nam_training_input.wav
