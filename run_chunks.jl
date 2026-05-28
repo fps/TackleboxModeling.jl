@@ -44,8 +44,8 @@ plt(x, "Input") |> display
 
 # outpath = "data/EVH 5150"
 # outpath = "data/BrianMay"
-outpath = "data/Fender Deluxe Reverb"
-# outpath = "data/marshall bluesbreaker 1962"
+# outpath = "data/Fender Deluxe Reverb"
+outpath = "data/marshall bluesbreaker 1962"
 # outpath = "data/nam_example"
 
 y, fs_y = WAV.wavread("$(outpath)/nam_training_output.wav")
