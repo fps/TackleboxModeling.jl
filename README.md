@@ -4,7 +4,7 @@ This software is in part inspired by Jim Lil's excellent "where does the tone co
 
 [https://www.youtube.com/watch?v=wcBEOcPtlYk](https://www.youtube.com/watch?v=wcBEOcPtlYk)
 
-In this video Jim makes the point that most common amplifiers can be broken down into three tone shaping stages, each possibly followed by a non-linearity:
+In this video Jim makes the point that most common amplifiers can be broken down into three tone shaping stages (or layers), each possibly followed by a non-linearity:
 
 - Input tone shaping
 - Nonlinearity
@@ -24,12 +24,17 @@ Here the 1D-convolutions take on the role of the tone shaping stages and the `di
 
 This architecture allows an efficient implementation in a plugin using partitioned convolution (about 1/10 of the processing load compared to standard NAMs). Since the number of non-linearities is quite limited it is possible to implement oversampling for only those relatively efficiently (ca. 50 % cpu load increase over the non-oversampling variant). 
 
-The code is flexible enough to add additional stages which can be useful for higher gain models.
+The code is flexible enough to add additional stages (layers) which can be useful for higher gain models.
 
 The two main parts of this software are:
 
 - Julia code to train a model. It uses CUDA.jl and cuDNN.jl in tandem with Flux.jl to perform the training on a GPU.
 - A simple LV2 plugin that allows the user to select one of the previously trained models. It would be easy to add model parameter loading from an e.g. JSON file but I don't need it. PRs welcome though. The plugin implements optional 2x oversampling (using a Chebyshev type II interpolation and decimation filter.)
+
+# Some implementation details
+
+- The loss function used is a windowed Short-Time-Fourier-Transform (STFT) loss. One little non-standard addition is that the window positions are somewhat randomized such that over the course of training every window shift is encountered eventually.
+- The size of the convolutional layers grows after a number of epochs. This is done in several stages. At the beginning of each stage the size of the convolution kernel is grown by a factor of 2x by convolving the existing kernel with a small random noise kernel of length (current kernel + 1). The 1st entry in the convolution kernel is set to 1. Additionally the learning rate is ramped up to the target learning rate over a number of epochs at the beginning of each stage.
 
 # Examples
 
@@ -164,7 +169,7 @@ meson compile -vC build
 - Implement time-distributed partitioned convolution to make the plugin more efficient
 - Add audio level calibration info to the models
 - Evaluate cheaper to compute nonlinearity (cheaper than tanh) (done: x / sqrt(1 + x^2))
-- Experiment with tone shaping controls between stages
+- Experiment with tone shaping controls between layers
 
 # License
 
