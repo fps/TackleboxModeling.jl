@@ -116,7 +116,7 @@ NAM
 Tacklebox
 </p>
 
-# EVH 5150
+## EVH 5150
 
 <p>
 <video controls width="300" height="50">
@@ -134,7 +134,7 @@ NAM
 Tacklebox
 </p>
 
-# Aliasing comparison (EVH 5150)
+## Aliasing comparison (EVH 5150)
 
 The interesting stuff happens after ca. 25 secs. or so...
 
