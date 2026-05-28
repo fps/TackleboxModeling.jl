@@ -1,4 +1,5 @@
 Find the repository here: [https://github.com/fps/TackleboxModeling.jl](https://github.com/fps/TackleboxModeling.jl)
+Find the gh-pages version with playable examples here: [https://fps.github.io/TackleboxModeling.jl](https://fps.github.io/TackleboxModeling.jl)
 
 This software is in part inspired by Jim Lil's excellent "where does the tone come from..." series of videos. Especially his video titled "Tested: Where Does The Tone Come From In A Guitar Amplifier?" which you can watch here:
 
