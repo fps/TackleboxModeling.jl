@@ -98,7 +98,7 @@ NAM
 Tacklebox
 </p>
 
-## BrianMay (includes antialiasing demonstration using a sine sweep)
+## BrianMay 
 
 <p>
 <video controls width="300" height="50">
@@ -116,36 +116,40 @@ NAM
 Tacklebox
 </p>
 
+# EVH 5150
+
 <p>
 <video controls width="300" height="50">
-  <source src="examples/BrianMay/oversampled_Take1_Audio 1-1_short.wav" type="audio/mpeg">
+  <source src="examples/EVH%205150/nam_Take1_Audio 1-1_short.wav" type="audio/mpeg">
   Your browser does not support the video tag.
 </video>
-Tacklebox, 2x oversampled
+NAM
 </p>
 
 <p>
 <video controls width="300" height="50">
-  <source src="examples/BrianMay/nam_sweep.wav" type="audio/mpeg">
+  <source src="examples/EVH%205150/test_Take1_Audio 1-1_short.wav" type="audio/mpeg">
   Your browser does not support the video tag.
 </video>
-sweep (NAM)
+Tacklebox
+</p>
+
+# Aliasing comparison (EVH 5150)
+
+<p>
+<video controls width="300" height="50">
+  <source src="examples/EVH%205150/nam_sweep.wav" type="audio/mpeg">
+  Your browser does not support the video tag.
+</video>
+NAM
 </p>
 
 <p>
 <video controls width="300" height="50">
-  <source src="examples/BrianMay/sweep.wav" type="audio/mpeg">
+  <source src="examples/EVH%205150/plugin_sweep2x.wav" type="audio/mpeg">
   Your browser does not support the video tag.
 </video>
-sweep (Tacklebox)
-</p>
-
-<p>
-<video controls width="300" height="50">
-  <source src="examples/BrianMay/oversampled_sweep.wav" type="audio/mpeg">
-  Your browser does not support the video tag.
-</video>
-sweep (Tacklebox, 2x oversampled)
+Tacklebox 2x oversampling
 </p>
 
 This code is just a proof of concept. Improvements welcome :)
