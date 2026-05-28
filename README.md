@@ -48,7 +48,11 @@ You will also need to download the `nam_training_input.wav` file from the neural
 36cd1af62985c2fac3e654333e36431e  data/nam_training_input.wav
 ```
 
-After downloading them you'll have to process the `nam_training_input.wav` file to create the corresponding `nam_training_output.wav` file using the `nam_wavenet` example from https://github.com/fps/anna and put it into the corresponding folder below `data`. Then you change the `run_chunks.jl` script to start with the right amount of layers (3 for all of them except the `EVH 5150` model which needs 4.) and run it (I usually do it by `include ("run_chunks")` on the julia prompt. Once you are satisified with the error (below 0.03 is very good, below 0.04 sometimes acceptable) you can `include("write_test_output.jl")` and then `include("write_model_output.jl")`. The former runs the julia version of the trained model on the `data/Take1_Audio\ 1-1_short.wav` example and the latter produces the `model.cc` code which is included into the tacklbox LV2 plugin.
+After downloading them you'll have to:
+
+- Process the `nam_training_input.wav` file to create the corresponding `nam_training_output.wav` file using the `nam_wavenet` example from https://github.com/fps/anna and put it into the corresponding folder below `data`. 
+- Change the `run_chunks.jl` script to start with the right amount of layers (3 for all of them except the `EVH 5150` model which needs 4.) and run it (I usually do it by `include("run_chunks.jl")` on the julia prompt. 
+- Once you are satisified with the error (below 0.03 is very good, below 0.04 sometimes acceptable) you can `include("write_test_output.jl")` and then `include("write_model_output.jl")`. The former runs the julia version of the trained model on the `data/Take1_Audio\ 1-1_short.wav` example and the latter produces the `model.cc` code which is included into the tacklbox LV2 plugin.
 
 ## Fender Deluxe Reverb
 
@@ -136,7 +140,7 @@ sweep (Tacklebox)
 sweep (Tacklebox, 2x oversampled)
 </p>
 
-This code is just a proof of concept.
+This code is just a proof of concept. Improvements welcome :)
 
 # Building the plugin
 
