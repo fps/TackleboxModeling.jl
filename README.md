@@ -136,6 +136,8 @@ Tacklebox
 
 # Aliasing comparison (EVH 5150)
 
+The interesting stuff happens after ca. 25 secs. or so...
+
 <p>
 <video controls width="300" height="50">
   <source src="examples/EVH%205150/nam_sweep.wav" type="audio/mpeg">
