@@ -46,7 +46,6 @@ namespace tacklebox
     enum OVERSAMPLING {
       DISABLED = 0,
       OVERSAMPLE2X,
-      OVERSAMPLE4X
     };
 
     std::vector<oversample2x> oversamplers;
@@ -113,18 +112,13 @@ namespace tacklebox
     }
 #endif
 
-    inline void dist_aa2_activation(int const layer, int const nframes)
+    inline void dist_aa2_activation(int const layer, float *input, float *output, int const nframes)
     {
-      std::vector<float> & buffer = buffers[current_buffer];
-
-      auto & oversampler = oversamplers[layer];
-      oversampler.upsample(buffer.data(), upsampled_input_buffer.data(), nframes);
-
-      for (int index = 0; index < (2 * nframes); ++index)
+      for (int index = 0; index < nframes; ++index)
       {
         float const x2 = dist_aa2_buffers[layer][0];
         float const x1 = dist_aa2_buffers[layer][1];
-        float const x0 = upsampled_input_buffer[index];
+        float const x0 = input[index];
 
         float const x01_2 = ((x0 + x1) / 2.f);
         float const x01_s = x01_2 * x01_2;
@@ -138,21 +132,16 @@ namespace tacklebox
 
         float const x1_3 = 3.f * x1;
 
-        upsampled_output_buffer[index] = 0.25f * (((x0 + x1_3) / (F12 + F1)) + ((x1_3 + x2) / (F1 + F32)));
-
-        // upsampled_output_buffer[index] = (x0 + x1) / (sqrtf(1.f + x0 * x0) + sqrtf(1.f + x1 * x1));
-        // upsampled_output_buffer[index] = tanhf(100.f *  x0);
-        // upsampled_output_buffer[index] = x0;
+        output[index] = 0.25f * (((x0 + x1_3) / (F12 + F1)) + ((x1_3 + x2) / (F1 + F32)));
 
         dist_aa2_buffers[layer][0] = x1;
         dist_aa2_buffers[layer][1] = x0;
       }
 
-      oversampler.downsample(upsampled_output_buffer.data(), buffer.data(), nframes);
       // oversamplers[layer].downsample(upsampled_input_buffer.data(), buffer.data(), nframes);
     }
 
-    inline void process_layer(int const layer, int const nframes)
+    inline void process_layer(int const layer, int oversampling, int const nframes)
     {
       convolvers[layer].process(buffers[current_buffer].data(), buffers[next_buffer()].data(), nframes);
       current_buffer = next_buffer();
@@ -164,27 +153,39 @@ namespace tacklebox
         buffers[current_buffer][frame] += biases[layer];
       }
 
-      if (activations[layer] == "tanh")
-      {
-        throw std::runtime_error("Unsupported activation");
-        // tanh_activation(layer, nframes, biases[layer]); 
-      }
-      else if (activations[layer] == "dist_aa")
-      {
-        throw std::runtime_error("Unsupported activation");
-        // dist_aa_activation(layer, nframes, biases[layer]); 
-      }
-      else if (activations[layer] == "dist_aa2")
-      {
-        dist_aa2_activation(layer, nframes); 
-      }
-      else if (activations[layer] == "nothing")
+      if (activations[layer] == "nothing")
       {
 
-      }
+      } 
       else
       {
-        throw std::runtime_error("Unsupported activation");
+        if (oversampling)
+        {
+          auto & oversampler = oversamplers[layer];
+          oversampler.upsample(buffers[current_buffer].data(), upsampled_input_buffer.data(), nframes);
+  
+          if (activations[layer] == "dist_aa2")
+          {
+            dist_aa2_activation(layer, upsampled_input_buffer.data(), upsampled_output_buffer.data(), 2*nframes); 
+          }
+          else
+          {
+            throw std::runtime_error("Unsupported activation");
+          }
+  
+          oversampler.downsample(upsampled_output_buffer.data(), buffers[current_buffer].data(), nframes);
+        }
+        else
+        {
+          if (activations[layer] == "dist_aa2")
+          {
+            dist_aa2_activation(layer, buffers[current_buffer].data(), buffers[current_buffer].data(), nframes);
+          }
+          else
+          {
+            throw std::runtime_error("Unsupported activation");
+          }
+        }
       }
     }
   
@@ -206,7 +207,7 @@ namespace tacklebox
 
       for (size_t layer = 0; layer < biases.size(); ++layer)
       {
-        process_layer(layer, nframes);
+        process_layer(layer, oversampling, nframes);
       }
 
       std::vector<float> &out_buffer = buffers[current_buffer];
