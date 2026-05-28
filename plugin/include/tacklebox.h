@@ -57,60 +57,6 @@ namespace tacklebox
     {
       return (current_buffer + 1) % 2;
     }
-#if 0
-  
-    inline void tanh_activation(int const layer, int const nframes, float const bias)
-    {
-      std::vector<float> & in_buffer = buffers[current_buffer];
-
-      std::vector<float> & upsampled_input_buffer = upsampled_input_buffers[layer];
-
-      upsamplers[layer].process_block(upsampled_input_buffer.data(), in_buffer.data(), nframes);
-
-      for (int index = 0; index < (2 * nframes); ++index)
-      {
-        upsampled_input_buffer[index] = tanhf(upsampled_input_buffer[index] + bias);
-      }
-
-      downsamplers[layer].process_block(in_buffer.data(), upsampled_input_buffer.data(), nframes);
-    }
-
-    inline void dist_aa_activation(int const layer, int const nframes, float const bias)
-    {
-      std::vector<float> & in_buffer = buffers[current_buffer];
-
-      std::vector<float> & upsampled_input_buffer = upsampled_input_buffers[layer];
-      std::vector<float> & upsampled_output_buffer = upsampled_output_buffers[layer];
-
-      upsamplers[layer].process_block(upsampled_input_buffer.data(), in_buffer.data(), nframes);
-
-      for (int index = 0; index < (2 * nframes); ++index)
-      {
-        if (index == (2 * nframes) - 1)
-        {
-          dist_aa_buffers[layer] = upsampled_input_buffer[index];
-        }
-
-        const float x0 = upsampled_input_buffer[index] + bias;
-        float x1 = 0;
-        if (index == 0)
-        {
-          x1 = dist_aa_buffers[layer] + bias;
-        }
-        else
-        {
-          x1 = upsampled_input_buffer[index - 1] + bias;
-        }
-
-        float const x0_2 = x0 * x0;
-        float const x1_2 = x1 * x1;
-
-        upsampled_output_buffer[index] = (x0 + x1) / (sqrtf(1 + x0_2) + sqrtf(1 + x1_2));
-      }
-
-      downsamplers[layer].process_block(in_buffer.data(), upsampled_output_buffer.data(), nframes);
-    }
-#endif
 
     inline void dist_aa2_activation(int const layer, float *input, float *output, int const nframes)
     {
@@ -137,16 +83,12 @@ namespace tacklebox
         dist_aa2_buffers[layer][0] = x1;
         dist_aa2_buffers[layer][1] = x0;
       }
-
-      // oversamplers[layer].downsample(upsampled_input_buffer.data(), buffer.data(), nframes);
     }
 
     inline void process_layer(int const layer, int oversampling, int const nframes)
     {
       convolvers[layer].process(buffers[current_buffer].data(), buffers[next_buffer()].data(), nframes);
       current_buffer = next_buffer();
-
-      // std::cout << current_buffer << "\n";
 
       for (int frame = 0; frame < nframes; ++frame)
       {
@@ -233,17 +175,12 @@ namespace tacklebox
       upsampled_input_buffer(2*blocksize),
       upsampled_output_buffer(2*blocksize)
     {
-      std::cout << "processor()...\n";
-  
       for (size_t index = 0; index < m.layers.size(); ++index)
       {
-        std::cout << "layer: " << index << "\n";
         convolvers[index].init(blocksize, m.layers[index].weights.data(), m.layers[index].weights.size());
         biases[index] = m.layers[index].bias;
         activations[index] = m.layers[index].activation;
       } 
-
-      std::cout << "done.\n";
     }
   };
 } 

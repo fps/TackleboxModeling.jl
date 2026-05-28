@@ -30,31 +30,25 @@ plt(x, title) = UnicodePlots.lineplot(x[:] |> cpu, width=:auto, title=title)
 @info "Loading data..."
 
 x, fs_x = WAV.wavread("data/nam_training_input.wav")
-# x, fs_x = WAV.wavread("data/Take1_Audio 1-1_shorter_0.5.wav")
-# x, fs_x = WAV.wavread("data/noise_input.wav")
-# x = x[1:(div(size(x, 1), chunksize) * chunksize)]
 
 x = Float32.(x)
 
 x_mean = Statistics.mean(x)
 x .-= x_mean
 x_scale = Statistics.std(x)
-# x_scale = maximum(abs.(x))
 x ./= x_scale
 
 # x = x[1:div(size(x, 1), 4)]
 
 plt(x, "Input") |> display
 
-outpath = "data/EVH 5150"
+# outpath = "data/EVH 5150"
 # outpath = "data/BrianMay"
-# outpath = "data/Fender Deluxe Reverb"
+outpath = "data/Fender Deluxe Reverb"
 # outpath = "data/marshall bluesbreaker 1962"
 # outpath = "data/nam_example"
 
 y, fs_y = WAV.wavread("$(outpath)/nam_training_output.wav")
-# y, fs_y = WAV.wavread("$(outpath)/nam_Take1_Audio 1-1_shorter_0.5.wav")
-# y, fs_y = WAV.wavread("$(outpath)/noise_output.wav")
 
 y = Float32.(y)
 y = y[1:size(x,1)]
@@ -62,7 +56,6 @@ y = y[1:size(x,1)]
 y_mean = Statistics.mean(y)
 y .-= y_mean
 y_scale = Statistics.std(y)
-# y_scale = maximum(abs.(y))
 y ./= y_scale
 
 plt(y, "Output") |> display
@@ -71,9 +64,6 @@ test_file_name = "Take1_Audio 1-1_short"
 test, test_fs = WAV.wavread("data/$(test_file_name).wav")
 
 test = Float32.(test)
-
-# test .-= x_mean
-# test ./= x_scale
 
 plt(test, "Test") |> display
 
@@ -125,7 +115,7 @@ end
 
 m_min = Flux.Chain(
     # Flux.Chain(Flux.Conv((2^2,), 1 => 1), activation),
-    Flux.Chain(Flux.Conv((2^2,), 1 => 1), activation),
+    # Flux.Chain(Flux.Conv((2^2,), 1 => 1), activation),
     Flux.Chain(Flux.Conv((2^2,), 1 => 1), activation),
     Flux.Chain(Flux.Conv((2^3,), 1 => 1), activation),
     Flux.Chain(Flux.Conv((2^4,), 1 => 1))
@@ -277,7 +267,7 @@ for stage in 1:8
   
       @info "loss: $loss, loss_min: $loss_min, min_epoch: $(min_epoch), (epoch - min_epoch): $(epoch - min_epoch)" #, grad: $(grad[1])"
       if !isfinite(loss)
-          @info "Ugh"
+          @info "Loss diverged. Bailing..."
           break
       end
   
@@ -297,6 +287,7 @@ for stage in 1:8
         break
       end
   end
+  push!(m_mins, deepcopy(m_min))
 end
   
 # include("write_test_output.jl")

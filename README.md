@@ -33,12 +33,14 @@ The two main parts of this software are:
 
 The models which are included with the plugin have been trained on input/output pairs produced by neural amp modeller (NAM) models. So they are "2nd-generation models" ;) To my ears they sound quite similar on my little test snippet. You can find them in the examples/ folder in the respective model subdirectory (the prefix "nam_" denotes the audio files rendered by NAM. the "test_" prefix denotes the audio files rendered by the tacklebox). You should get playable links below if you visit the github pages version of this repository: [https://fps.github.io/TackleboxModeling.jl](https://fps.github.io/TackleboxModeling.jl).
 
+## Fender Deluxe Reverb
+
 <p>
 <video controls width="300" height="50">
   <source src="examples/Fender Deluxe Reverb/nam_Take1_Audio 1-1_short.wav" type="audio/mpeg">
   Your browser does not support the video tag.
 </video>
-Fender Deluxe Reverb (NAM)
+NAM
 </p>
 
 <p>
@@ -46,15 +48,17 @@ Fender Deluxe Reverb (NAM)
   <source src="examples/Fender Deluxe Reverb/test_Take1_Audio 1-1_short.wav" type="audio/mpeg">
   Your browser does not support the video tag.
 </video>
-Fender Deluxe Reverb (Tacklebox)
+Tacklebox
 </p>
+
+## Marshal Bluesbreaker 1962
 
 <p>
 <video controls width="300" height="50">
   <source src="examples/marshall bluesbreaker 1962/nam_Take1_Audio 1-1_short.wav" type="audio/mpeg">
   Your browser does not support the video tag.
 </video>
-marshall bluesbreaker 1962 (NAM)
+NAM
 </p>
 
 <p>
@@ -62,15 +66,17 @@ marshall bluesbreaker 1962 (NAM)
   <source src="examples/marshall bluesbreaker 1962/test_Take1_Audio 1-1_short.wav" type="audio/mpeg">
   Your browser does not support the video tag.
 </video>
-marshall bluesbreaker 1962 (Tacklebox)
+Tacklebox
 </p>
+
+## BrianMay
 
 <p>
 <video controls width="300" height="50">
   <source src="examples/BrianMay/nam_Take1_Audio 1-1_short.wav" type="audio/mpeg">
   Your browser does not support the video tag.
 </video>
-BrianMay (NAM)
+NAM
 </p>
 
 <p>
@@ -78,7 +84,7 @@ BrianMay (NAM)
   <source src="examples/BrianMay/test_Take1_Audio 1-1_short.wav" type="audio/mpeg">
   Your browser does not support the video tag.
 </video>
-BrianMay (Tacklebox)
+Tacklebox
 </p>
 
 <p>
@@ -86,7 +92,7 @@ BrianMay (Tacklebox)
   <source src="examples/BrianMay/oversampled_Take1_Audio 1-1_short.wav" type="audio/mpeg">
   Your browser does not support the video tag.
 </video>
-BrianMay (Tacklebox, 8x oversampled tanh)
+Tacklebox, 2x oversampled
 </p>
 
 <p>
@@ -94,7 +100,7 @@ BrianMay (Tacklebox, 8x oversampled tanh)
   <source src="examples/BrianMay/nam_sweep.wav" type="audio/mpeg">
   Your browser does not support the video tag.
 </video>
-BrianMay sweep (NAM)
+sweep (NAM)
 </p>
 
 <p>
@@ -102,7 +108,7 @@ BrianMay sweep (NAM)
   <source src="examples/BrianMay/sweep.wav" type="audio/mpeg">
   Your browser does not support the video tag.
 </video>
-BrianMay - sweep (Tacklebox)
+sweep (Tacklebox)
 </p>
 
 <p>
@@ -110,7 +116,7 @@ BrianMay - sweep (Tacklebox)
   <source src="examples/BrianMay/oversampled_sweep.wav" type="audio/mpeg">
   Your browser does not support the video tag.
 </video>
-BrianMay - sweep (Tacklebox, 8x oversampled tanh)
+sweep (Tacklebox, 2x oversampled)
 </p>
 
 This code is just a proof of concept.

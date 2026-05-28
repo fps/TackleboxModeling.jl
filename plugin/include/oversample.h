@@ -22,12 +22,12 @@ struct oversample2x
     for (int n = 0; n < nsamples; ++n)
     {
       output[2 * n] = 0.f;
-      output[2 * n + 1] = input[n];
+      output[2 * n + 1] = 2.f * input[n];
     }
 
     for (int n = 0; n < 2 * nsamples; ++n)
     {
-      output[n] = upsampling_filter.process(2.f * output[n]);
+      output[n] = upsampling_filter.process(output[n]);
     }
   }
 
