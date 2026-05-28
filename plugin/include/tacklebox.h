@@ -43,6 +43,12 @@ namespace tacklebox
     std::vector<float> dist_aa_buffers;
     std::vector<std::array<float, 2>> dist_aa2_buffers;
 
+    enum OVERSAMPLING {
+      DISABLED = 0,
+      OVERSAMPLE2X,
+      OVERSAMPLE4X
+    };
+
     std::vector<oversample2x> oversamplers;
 
     std::vector<float> upsampled_input_buffer;
@@ -182,7 +188,7 @@ namespace tacklebox
       }
     }
   
-    inline void process(float const * const in, float * const out, float const pre_coef, float const post_coef, int const nframes)
+    inline void process(float const * const in, float * const out, float const pre_coef, float const post_coef, int oversampling, int const nframes)
     {
       // std::cout << pre_coef << " " << post_coef << "\n";
       if (nframes > (int)buffers[0].size())

@@ -20,6 +20,7 @@ struct Tacklebox
     const float *data_in;  //audio  input
     float       *data_out; //audio output
     const float *model;
+    const float *oversampling;
 
     Tacklebox() 
     {
@@ -37,6 +38,7 @@ typedef enum {
     TACKLEBOX_INPUT,
     TACKLEBOX_OUTPUT,
     TACKLEBOX_MODEL,
+    TACKLEBOX_OVERSAMPLING,
 } PortIndex;
 
 static void activate(LV2_Handle instance) {}
@@ -62,6 +64,7 @@ connect_port(LV2_Handle instance,
 	case TACKLEBOX_INPUT: tacklebox->data_in = (const float*)data; break;
 	case TACKLEBOX_OUTPUT: tacklebox->data_out = (float*)data; break;
 	case TACKLEBOX_MODEL: tacklebox->model = (float*)data; break;
+	case TACKLEBOX_OVERSAMPLING: tacklebox->oversampling = (float*)data; break;
 	}
 }
 
@@ -77,6 +80,7 @@ run(LV2_Handle instance, uint32_t n_samples)
 	const float* const input  = tacklebox->data_in;
 	float* const       output = tacklebox->data_out;
   float const        model = *(tacklebox->model);
+  float const        oversampling = *(tacklebox->oversampling);
 
   size_t model_index = (size_t)round(model * (tacklebox->processors.size() - 1));
 
@@ -90,12 +94,12 @@ run(LV2_Handle instance, uint32_t n_samples)
   {
     if (n_samples_left >= 64)
     {
-      p.process(input + (n_samples - n_samples_left), output + (n_samples - n_samples_left), pre_coef, post_coef, 64);
+      p.process(input + (n_samples - n_samples_left), output + (n_samples - n_samples_left), pre_coef, post_coef, (int)oversampling, 64);
       n_samples_left -= 64;
     }
     else
     {
-      p.process(input + (n_samples - n_samples_left), output + (n_samples - n_samples_left), pre_coef, post_coef, n_samples_left);
+      p.process(input + (n_samples - n_samples_left), output + (n_samples - n_samples_left), pre_coef, post_coef, (int)oversampling, n_samples_left);
       n_samples_left -= n_samples_left;
     }
   }
