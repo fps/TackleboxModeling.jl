@@ -4,7 +4,7 @@ This software is in part inspired by Jim Lil's excellent "where does the tone co
 
 [https://www.youtube.com/watch?v=wcBEOcPtlYk](https://www.youtube.com/watch?v=wcBEOcPtlYk)
 
-In this video Jim belabors the point that most common amplifiers can be broken down into three tone shaping stages, each possibly followed by a non-linearity:
+In this video Jim makes the point that most common amplifiers can be broken down into three tone shaping stages, each possibly followed by a non-linearity:
 
 - Input tone shaping
 - Nonlinearity
