@@ -18,7 +18,7 @@ The neural model then becomes:
 - dist_aa2
 - 1D-convolution of size (1024) (1 channel)
 
-Here the 1D-convolutions take on the role of the tone shaping stages and the tanh activation functions perform the non-linearity/distortion. `dist_aa2` is the non-linearity `x / sqrt(1+x^2)` cast into the antiderivative antialiasing form described in "Note on Alias Suppression in Digital Distortion" by Martin Vicanek (2024.) See equation 10 in that paper.
+Here the 1D-convolutions take on the role of the tone shaping stages and the `dist_aa2` activation functions perform the non-linearity/distortion. `dist_aa2` is the non-linearity `x / sqrt(1+x^2)` cast into the "transparent" antiderivative antialiasing form described in "Note on Alias Suppression in Digital Distortion" by Martin Vicanek (2024.) See equation 10 in that paper.
 
 This architecture allows an efficient implementation in a plugin using partitioned convolution (about 1/10 of the processing load compared to standard NAMs). Since the number of non-linearities is quite limited it is possible to implement oversampling for only those relatively efficiently (ca. 50 % cpu load increase over the non-oversampling variant). 
 
