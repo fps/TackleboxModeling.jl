@@ -1,4 +1,4 @@
-project('tacklebox', 'cpp', version : '0.1', default_options : 'warning_level=everything')
+project('tacklebox', 'cpp', version : '0.1', default_options : 'warning_level=1')
 
 lv2 = dependency('lv2')
 fftw3f = dependency('fftw3f')
