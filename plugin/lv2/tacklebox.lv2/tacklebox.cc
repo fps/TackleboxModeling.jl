@@ -85,7 +85,7 @@ static void run(LV2_Handle instance, uint32_t n_samples)
   float* const       output = tacklebox->data_out;
   int const          model = std::max(0, std::min((int)tacklebox->processors.size()-1, (int)roundf(*(tacklebox->model))));
   int const          oversampling = (int)roundf(*(tacklebox->oversampling));
-  int const          stage_to_process = std::max(0, std::min((int)tacklebox->processors[model].biases.size()-1, (int)roundf(*(tacklebox->stage_to_process))));
+  int const          stage_to_process = std::max(0, std::min((int)tacklebox->processors[model].biases.size(), (int)roundf(*(tacklebox->stage_to_process))));
 
   tacklebox::processor &p = tacklebox->processors[model];
 
