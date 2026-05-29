@@ -21,6 +21,7 @@ struct Tacklebox
   float       *data_out; //audio output
   const float *model;
   const float *oversampling;
+  const float *stage_to_process;
 
   Tacklebox() 
   {
@@ -38,10 +39,13 @@ typedef enum {
   TACKLEBOX_OUTPUT,
   TACKLEBOX_MODEL,
   TACKLEBOX_OVERSAMPLING,
+  TACKLEBOX_STAGE_TO_PROCESS,
 } PortIndex;
 
 static void activate(LV2_Handle instance) {}
+
 static void deactivate(LV2_Handle instance) {}
+
 static const void *extension_data(const char *uri) { return NULL; }
 
 static LV2_Handle instantiate(const LV2_Descriptor * d, double x, const char *c, const LV2_Feature *const *f) 
@@ -65,6 +69,7 @@ static void connect_port(LV2_Handle instance, uint32_t port, void* data)
     case TACKLEBOX_OUTPUT: tacklebox->data_out = (float*)data; break;
     case TACKLEBOX_MODEL: tacklebox->model = (float*)data; break;
     case TACKLEBOX_OVERSAMPLING: tacklebox->oversampling = (float*)data; break;
+    case TACKLEBOX_STAGE_TO_PROCESS: tacklebox->stage_to_process = (float*)data; break;
   }
 }
 
@@ -79,7 +84,8 @@ static void run(LV2_Handle instance, uint32_t n_samples)
   const float* const input  = tacklebox->data_in;
   float* const       output = tacklebox->data_out;
   float const        model = *(tacklebox->model);
-  float const        oversampling = *(tacklebox->oversampling);
+  int const          oversampling = (int)roundf(*(tacklebox->oversampling));
+  int const          stage_to_process = (int)roundf(*(tacklebox->stage_to_process));
 
   size_t model_index = (size_t)round(model * (tacklebox->processors.size() - 1));
 
@@ -91,14 +97,15 @@ static void run(LV2_Handle instance, uint32_t n_samples)
   int n_samples_left = n_samples;
   while (n_samples_left > 0)
   {
+    int const offset = n_samples - n_samples_left;
     if (n_samples_left >= 64)
     {
-      p.process(input + (n_samples - n_samples_left), output + (n_samples - n_samples_left), pre_coef, post_coef, (int)oversampling, 64);
+      p.process(input + offset, output + offset, pre_coef, post_coef, oversampling, stage_to_process, 64);
       n_samples_left -= 64;
     }
     else
     {
-      p.process(input + (n_samples - n_samples_left), output + (n_samples - n_samples_left), pre_coef, post_coef, (int)oversampling, n_samples_left);
+      p.process(input + offset, output + offset, pre_coef, post_coef, oversampling, stage_to_process, n_samples_left);
       n_samples_left -= n_samples_left;
     }
   }

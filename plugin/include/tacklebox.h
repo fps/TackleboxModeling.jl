@@ -131,7 +131,7 @@ namespace tacklebox
       }
     }
   
-    inline void process(float const * const in, float * const out, float const pre_coef, float const post_coef, int oversampling, int const nframes)
+    inline void process(float const * const in, float * const out, float const pre_coef, float const post_coef, int const oversampling, int const stage_to_process, int const nframes)
     {
       // std::cout << pre_coef << " " << post_coef << "\n";
       if (nframes > (int)buffers[0].size())
@@ -142,20 +142,54 @@ namespace tacklebox
       current_buffer = 0;
       std::vector<float> & in_buffer = buffers[current_buffer];
 
-      for (int index = 0; index < nframes; ++index)
+       // If processing all stages (stage_to_process == 0) or just the first stage then apply scaling factors...
+      if (stage_to_process <= 1)
       {
-        in_buffer[index] = (pre_coef * in[index] - x_mean) / x_scale;
+ 
+        for (int index = 0; index < nframes; ++index)
+        {
+          in_buffer[index] = (pre_coef * in[index] - x_mean) / x_scale;
+        }
+      }
+      // Otherwise just copy the input into the input buffer..
+      else
+      {
+        for (int index = 0; index < nframes; ++index)
+        {
+          in_buffer[index] = in[index];
+        }
       }
 
-      for (size_t layer = 0; layer < biases.size(); ++layer)
+      // If stage_to_process is 0, process the whole thing...
+      if (stage_to_process == 0)
       {
-        process_layer(layer, oversampling, nframes);
+        for (size_t layer = 0; layer < biases.size(); ++layer)
+        {
+          process_layer(layer, oversampling, nframes);
+        }
+      } 
+      // Otherwise just process the requested stage
+      else
+      {
+        process_layer(stage_to_process - 1, oversampling, nframes);
       }
 
       std::vector<float> &out_buffer = buffers[current_buffer];
-      for (int index = 0; index < nframes; ++index)
+
+      // If we are processing the whole thing or just the last stage apply scaling factors
+      if (stage_to_process == 0 || stage_to_process == (int)biases.size() - 1)     
       {
-        out[index] = post_coef * ((out_buffer[index] * y_scale) + y_mean);
+        for (int index = 0; index < nframes; ++index)
+        {
+          out[index] = post_coef * ((out_buffer[index] * y_scale) + y_mean);
+        }
+      }
+      else
+      {
+        for (int index = 0; index < nframes; ++index)
+        {
+          out[index] = out_buffer[index];
+        }
       }
     }
  
