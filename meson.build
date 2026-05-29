@@ -8,6 +8,7 @@ add_project_arguments('-DNDEBUG', language: 'cpp')
 add_project_arguments('-DAUDIOFFT_FFTW3', language: 'cpp')
 add_project_arguments('-march=native', language: 'cpp')
 # add_project_arguments('-Wall', language: 'cpp')
+# add_project_arguments('-DFFTCONVOLVER_DONT_USE_SSE', language: 'cpp')
 
 fftconvolver = static_library('fftconvolver', [ './FFTConvolver/AudioFFT.cpp', './FFTConvolver/FFTConvolver.cpp', './FFTConvolver/TwoStageFFTConvolver.cpp', './FFTConvolver/Utilities.cpp' ])
 
