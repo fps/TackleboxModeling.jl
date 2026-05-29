@@ -83,13 +83,11 @@ static void run(LV2_Handle instance, uint32_t n_samples)
   const float        post_gain   = *(tacklebox->post_gain);
   const float* const input  = tacklebox->data_in;
   float* const       output = tacklebox->data_out;
-  float const        model = *(tacklebox->model);
+  int const          model = std::max(0, std::min((int)tacklebox->processors.size()-1, (int)roundf(*(tacklebox->model))));
   int const          oversampling = (int)roundf(*(tacklebox->oversampling));
-  int const          stage_to_process = (int)roundf(*(tacklebox->stage_to_process));
+  int const          stage_to_process = std::max(0, std::min((int)tacklebox->processors[model].biases.size()-1, (int)roundf(*(tacklebox->stage_to_process))));
 
-  size_t model_index = (size_t)round(model * (tacklebox->processors.size() - 1));
-
-  tacklebox::processor &p = tacklebox->processors[model_index];
+  tacklebox::processor &p = tacklebox->processors[model];
 
   const float pre_coef = DB_CO(pre_gain);
   const float post_coef = DB_CO(post_gain);
