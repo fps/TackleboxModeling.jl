@@ -180,13 +180,13 @@ meson compile -vC build
 # Using the plugin
 
 - Adjust pre/and post gain to your liking
-- Move the model slider between 0 and 1 to switch between the included models
-- Enable 2x oversampling if you so desire by setting the Oversampling control to 1
+- Move the model slider between 0 and `number of models - 1` to switch between the included models (your host possibly presents the choice as a combo box)
+- Enable 2x oversampling if you so desire by setting the Oversampling control to 1 (your host possibly presents the choice as combo box)
 
 # TODOs / Limitations
 
 - Try oversampling for the non-linearity in the plugin and check whether that alters the sound too much (done: it doesn't. Implemented: 2x oversampling in combination with anti-derivative antialiasing)
-- Implement better model selection in the LV2 plugin
+- Implement better model selection in the LV2 plugin (done)
 - Implement noise-free model switching in the LV2 plugin
 - Improve the training code from being a stinking pile of poop to something reusable
 - Implement time-distributed partitioned convolution to make the plugin more efficient
