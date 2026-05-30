@@ -33,7 +33,7 @@ The code is flexible enough to add additional stages (layers) which can be usefu
 
 # Caveat Emptor
 
-This model is kept simple deliberately. It is not and will never be able to model non-linear effects that go beyond the architecture of "EQ followed by distortion followed by EQ followed by distortion...". In that sens the architecture of e.g. Neural Amp Modeler is strictly _more_ powerful. What we gain by this choice of simplicity is efficiency...
+This model is kept simple deliberately. It is not and will never be able to model non-linear effects that go beyond the architecture of "EQ followed by distortion followed by EQ followed by distortion...". In that sense the architecture of e.g. Neural Amp Modeler is strictly _more_ powerful. What we gain by this choice of simplicity is efficiency...
 
 # Overview
 
