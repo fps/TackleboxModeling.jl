@@ -3,6 +3,7 @@ project('tacklebox', 'cpp', version : '0.1', default_options : 'warning_level=1'
 lv2 = dependency('lv2')
 # fftw3f = dependency('fftw3f', static: true)
 fftw3f = dependency('fftw3f')
+samplerate = dependency('samplerate')
 
 add_project_arguments('-DNDEBUG', language: 'cpp')
 # add_project_arguments('-D_GLIBCXX_DEBUG', language: 'cpp')

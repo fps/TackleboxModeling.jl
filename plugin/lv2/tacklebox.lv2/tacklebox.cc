@@ -12,7 +12,7 @@ std::vector<tacklebox::model> models =
   #include "../../../data/EVH 5150/model.cc"
 };
 
-struct Tacklebox
+struct tacklebox_lv2
 {
   std::vector<tacklebox::processor> processors;
   const float *pre_gain;     //control input
@@ -23,11 +23,11 @@ struct Tacklebox
   const float *oversampling;
   const float *stage_to_process;
 
-  Tacklebox() 
+  tacklebox_lv2(float samplerate) 
   {
     for (size_t index = 0; index < models.size(); ++index)
     {
-      processors.push_back(tacklebox::processor(models[index], 64));
+      processors.push_back(tacklebox::processor(models[index], 64, samplerate));
     }
   }
 };
@@ -48,19 +48,19 @@ static void deactivate(LV2_Handle instance) {}
 
 static const void *extension_data(const char *uri) { return NULL; }
 
-static LV2_Handle instantiate(const LV2_Descriptor * d, double x, const char *c, const LV2_Feature *const *f) 
+static LV2_Handle instantiate(const LV2_Descriptor * d, double samplerate, const char *c, const LV2_Feature *const *f) 
 { 
-  return (LV2_Handle) new Tacklebox; 
+  return (LV2_Handle) new tacklebox_lv2(samplerate); 
 }
 
 static void cleanup(LV2_Handle instance) 
 { 
-  std::cout << "cleanup...\n"; delete (Tacklebox*)instance; 
+  std::cout << "cleanup...\n"; delete (tacklebox_lv2*)instance; 
 }
 
 static void connect_port(LV2_Handle instance, uint32_t port, void* data)
 {
-  Tacklebox* tacklebox = (Tacklebox*)instance;
+  tacklebox_lv2* tacklebox = (tacklebox_lv2*)instance;
 
   switch ((PortIndex)port) {
     case TACKLEBOX_PRE_GAIN: tacklebox->pre_gain = (const float*)data; break;
@@ -77,7 +77,7 @@ static void connect_port(LV2_Handle instance, uint32_t port, void* data)
 
 static void run(LV2_Handle instance, uint32_t n_samples)
 {
-  Tacklebox* tacklebox = (Tacklebox*)instance;
+  tacklebox_lv2* tacklebox = (tacklebox_lv2*)instance;
 
   const float        pre_gain   = *(tacklebox->pre_gain);
   const float        post_gain   = *(tacklebox->post_gain);

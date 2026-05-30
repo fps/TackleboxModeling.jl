@@ -5,6 +5,7 @@
 #include <iostream>
 #include <array>
 
+#include <samplerate.h>
 #include <oversample.h>
 
 namespace tacklebox
@@ -193,7 +194,7 @@ namespace tacklebox
       }
     }
  
-    processor(model const & m, int blocksize) :
+    processor(model & m, int const blocksize, float const samplerate) :
       buffers{std::vector<float>(blocksize, 0), std::vector<float>(blocksize, 0)},
       current_buffer(0),
       x_scale(m.x_scale),
@@ -211,6 +212,17 @@ namespace tacklebox
     {
       for (size_t index = 0; index < m.layers.size(); ++index)
       {
+        if (samplerate != 48000.f)
+        {
+          std::vector<float> new_weights((int)ceilf(m.layers[index].weights.size() * samplerate/48000.f), 0.f);
+          SRC_DATA src = { m.layers[index].weights.data(), new_weights.data(), (long)m.layers[index].weights.size(), (long)new_weights.size(), 0, 0, 0, samplerate/48000.f };
+          if (0 != src_simple(&src, SRC_SINC_BEST_QUALITY, 1))
+          {
+            throw std::runtime_error("resampling fsiled");
+          }
+          m.layers[index].weights = new_weights;
+        }
+
         convolvers[index].init(blocksize, m.layers[index].weights.data(), m.layers[index].weights.size());
         biases[index] = m.layers[index].bias;
         activations[index] = m.layers[index].activation;

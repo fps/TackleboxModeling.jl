@@ -10,7 +10,7 @@ int main()
     #include "../data/EVH 5150/model.cc"
   };
 
-  tacklebox::processor t(ms[0], 64);
+  tacklebox::processor t(ms[0], 64, 48000);
 
   std::vector<float> in(64);
   std::vector<float> out(64);
