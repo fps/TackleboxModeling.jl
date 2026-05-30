@@ -50,7 +50,15 @@ static const void *extension_data(const char *uri) { return NULL; }
 
 static LV2_Handle instantiate(const LV2_Descriptor * d, double samplerate, const char *c, const LV2_Feature *const *f) 
 { 
-  return (LV2_Handle) new tacklebox_lv2(samplerate); 
+  try 
+  {
+    return (LV2_Handle) new tacklebox_lv2(samplerate); 
+  }
+  catch(std::runtime_error & e)
+  {
+    // TODO: log reason
+    return 0;
+  }
 }
 
 static void cleanup(LV2_Handle instance) 
