@@ -35,9 +35,9 @@ The code is flexible enough to add additional stages (layers) which can be usefu
 
 This model is kept simple deliberately. It is not and will never be able to model non-linear effects that go beyond the architecture of "EQ followed by distortion followed by EQ followed by distortion...". In that sens the architecture of e.g. Neural Amp Modeler is strictly _more_ powerful. What we gain by this choice of simplicity is efficiency...
 
-The two main parts of this software are:
-
 # Overview
+
+The two main parts of this software are:
 
 - Julia code to train a model. It uses CUDA.jl and cuDNN.jl in tandem with Flux.jl to perform the training on a GPU.
 - A simple LV2 plugin that allows the user to select one of the previously trained models. It would be easy to add model parameter loading from an e.g. JSON file but I don't need it. PRs welcome though. The plugin implements optional 2x oversampling (using a Chebyshev type II interpolation and decimation filter.)
