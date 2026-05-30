@@ -1,11 +1,13 @@
 - Find the repository here: [https://github.com/fps/TackleboxModeling.jl](https://github.com/fps/TackleboxModeling.jl)
 - Find the gh-pages version with playable examples here: [https://fps.github.io/TackleboxModeling.jl](https://fps.github.io/TackleboxModeling.jl)
 
+# Introduction
+
 This software is in part inspired by Jim Lil's excellent "where does the tone come from..." series of videos. Especially his video titled "Tested: Where Does The Tone Come From In A Guitar Amplifier?" which you can watch here:
 
 [https://www.youtube.com/watch?v=wcBEOcPtlYk](https://www.youtube.com/watch?v=wcBEOcPtlYk)
 
-In this video Jim makes the point that most common amplifiers can be broken down into three tone shaping stages (or layers), each possibly followed by a non-linearity:
+In this video Jim makes the point that most common guitar amplifiers can be broken down into three tone shaping stages (or layers), each possibly followed by a non-linearity:
 
 - Input tone shaping
 - Nonlinearity
@@ -13,21 +15,29 @@ In this video Jim makes the point that most common amplifiers can be broken down
 - Nonlinearity
 - Cabinet tone shaping
 
-The neural model then becomes:
+We can take this description and cast it into a very simple "neural-network" form:
 
 - 1D-convolution of size (256) (1 channel)
-- dist_aa2
+- dist_aa2 (
 - 1D-convolution of size (512) (1 channel)
 - dist_aa2
 - 1D-convolution of size (1024) (1 channel)
 
 Here the 1D-convolutions take on the role of the tone shaping stages and the `dist_aa2` activation functions perform the non-linearity/distortion. `dist_aa2` is the non-linearity `x / sqrt(1+x^2)` cast into the "transparent" antiderivative antialiasing form described in "Note on Alias Suppression in Digital Distortion" by Martin Vicanek (2024.) See equation 10 in that paper.
 
+Note that this is a "neural network" in a very loose sense. There is only one channel throughout the whole thing. It _does_ have the property of being affine transformations followed by non-linearities and that it is trainable by gradient descent, but that's pretty much where the similarities end.
+
 This architecture allows an efficient implementation in a plugin using partitioned convolution (about 1/4 of the processing load compared to standard NAMs). Since the number of non-linearities is quite limited it is possible to implement oversampling for only those relatively efficiently (ca. 50 % cpu load increase over the non-oversampling variant). 
 
 The code is flexible enough to add additional stages (layers) which can be useful for higher gain models.
 
+# Caveat Emptor
+
+This model is kept simple deliberately. It is not and will never be able to model non-linear effects that go beyond the architecture of "EQ followed by distortion followed by EQ followed by distortion...". In that sens the architecture of e.g. Neural Amp Modeler is strictly _more_ powerful. What we gain by this choice of simplicity is efficiency...
+
 The two main parts of this software are:
+
+# Overview
 
 - Julia code to train a model. It uses CUDA.jl and cuDNN.jl in tandem with Flux.jl to perform the training on a GPU.
 - A simple LV2 plugin that allows the user to select one of the previously trained models. It would be easy to add model parameter loading from an e.g. JSON file but I don't need it. PRs welcome though. The plugin implements optional 2x oversampling (using a Chebyshev type II interpolation and decimation filter.)
@@ -182,7 +192,7 @@ meson compile -vC build
 - Implement time-distributed partitioned convolution to make the plugin more efficient
 - Add audio level calibration info to the models
 - Evaluate cheaper to compute nonlinearity (cheaper than tanh) (done: x / sqrt(1 + x^2))
-- Experiment with tone shaping controls between layers
+- Experiment with tone shaping controls between layers (done: A control input allows to select which stage(s) to process: Either all of them or a single one)
 - Implement model loading from e.g. json-files instead of hardbaking them into the plugin
 
 # License
