@@ -171,9 +171,9 @@ This code is just a proof of concept. Improvements welcome :)
 ```bash
 meson setup build -Dbuildtype=release
 meson compile -vC build
+```
 
 On some platforms (notably raspberry os) you might want to disable the use of FFTW(f) by adding `-Dfftw=disabled` to avoid long startup times (at the price if slightly higher cpu usage.)
-```
 
 # Installing the plugin
 
