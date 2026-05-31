@@ -1,5 +1,6 @@
 #include <tacklebox.h>
 #include <lv2/core/lv2.h>
+#include <lv2/log/log.h>
 #include <iostream>
 
 #define TACKLEBOX_URI "http://dfdx.eu/lv2/tacklebox"
@@ -23,7 +24,7 @@ struct tacklebox_lv2
   const float *oversampling;
   const float *stage_to_process;
 
-  tacklebox_lv2(float samplerate) 
+  tacklebox_lv2(float samplerate)
   {
     for (size_t index = 0; index < models.size(); ++index)
     {
@@ -50,13 +51,32 @@ static const void *extension_data(const char *uri) { return NULL; }
 
 static LV2_Handle instantiate(const LV2_Descriptor * d, double samplerate, const char *c, const LV2_Feature *const *f) 
 { 
+  LV2_Log_Log *log = nullptr;
+  LV2_URID_Map *urid_map = nullptr;
+
+  while((*f) != nullptr)
+  {
+    if ((*f)->URI == std::string(LV2_LOG__log))
+    {
+      log = (LV2_Log_Log*)(*f)->data;
+    }
+    if ((*f)->URI == std::string(LV2_URID__map))
+    {
+      urid_map = (LV2_URID_Map*)(*f)->data;
+    }
+    f += 1;
+  }
+
   try 
   {
     return (LV2_Handle) new tacklebox_lv2(samplerate); 
   }
   catch(std::runtime_error & e)
   {
-    // TODO: log reason
+    if (log != nullptr && urid_map != nullptr)
+    {
+      log->printf(log, urid_map->map(urid_map->handle, LV2_LOG__Error), "%s: %s\n", TACKLEBOX_URI, e.what());
+    }
     return 0;
   }
 }
