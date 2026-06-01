@@ -115,8 +115,8 @@ function extend_model(m, noise_scale = 1f-3)
 end
 
 m_min = Flux.Chain(
-    # Flux.Chain(Flux.Conv((2^2,), 1 => 1), activation),
-    # Flux.Chain(Flux.Conv((2^2,), 1 => 1), activation),
+    Flux.Chain(Flux.Conv((2^2,), 1 => 1), activation),
+    Flux.Chain(Flux.Conv((2^2,), 1 => 1), activation),
     Flux.Chain(Flux.Conv((2^2,), 1 => 1), activation),
     Flux.Chain(Flux.Conv((2^3,), 1 => 1), activation),
     Flux.Chain(Flux.Conv((2^4,), 1 => 1))
@@ -190,7 +190,7 @@ for stage in 1:8
 
   global m_mins
 
-  lr = lr_max * 0.9^(stage-1)
+  lr = lr_max * 0.8^(stage-1)
 
   # lr *= 0.9
 
@@ -213,7 +213,7 @@ for stage in 1:8
   n_samples = size(x, 1)
   n_chunks = div(n_samples - chunksize_x, overlap)
   
-  batchsize = min(2^10, n_chunks)
+  batchsize = min(2^9, n_chunks)
 
   
   @info "n_chunks: $n_chunks"
