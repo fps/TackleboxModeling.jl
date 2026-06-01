@@ -1,4 +1,4 @@
-ENV["JULIA_CUDA_HARD_MEMORY_LIMIT"] = "8GiB"
+ENV["JULIA_CUDA_HARD_MEMORY_LIMIT"] = "6GiB"
 
 @info "Activating package..."
 
@@ -42,8 +42,9 @@ x ./= x_scale
 
 plt(x, "Input") |> display
 
+outpath = "data/VOX AC30 TOP BOOST Greenback - VOX TOPBOOST HI FULLGAIN TC 5 MAST4 - SM57"
 # outpath = "data/EVH 5150"
-outpath = "data/BrianMay"
+# outpath = "data/BrianMay"
 # outpath = "data/Fender Deluxe Reverb"
  #outpath = "data/marshall bluesbreaker 1962"
 # outpath = "data/nam_example"
@@ -71,9 +72,9 @@ plt(test, "Test") |> display
 
 # See: Note on Alias Suppression in Digital Distortion, Martin Vicanek
 function dist_aa2(x)
-  x0 = @view x[3:end,:,:]
-  x1 = @view x[2:(end-1),:,:]
-  x2 = @view x[1:(end-2),:,:]
+  x0 = x[3:end,:,:]
+  x1 = x[2:(end-1),:,:]
+  x2 = x[1:(end-2),:,:]
 
   F1 = sqrt.(1 .+ x1.^2)
   F12 = sqrt.(1 .+ ((x0 + x1)./2).^2)
@@ -158,7 +159,8 @@ warmup = 10
 
 loss_min = 1f10
 
-patience = 2^7
+# patience = 2^7
+patience = 2^2
 
 min_epoch = 1
 
@@ -188,7 +190,7 @@ for stage in 1:8
 
   global m_mins
 
-  lr = lr_max
+  lr = lr_max * 0.9^(stage-1)
 
   # lr *= 0.9
 

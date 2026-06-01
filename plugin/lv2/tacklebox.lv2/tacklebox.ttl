@@ -44,7 +44,7 @@
     lv2:name "Model" ;
     lv2:default 0.0 ;
     lv2:minimum 0.0 ;
-    lv2:maximum 3.0 ;
+    lv2:maximum 4.0 ;
     lv2:portProperty lv2:enumeration ;
     lv2:scalePoint [
       rdfs:label "Fender Deluxe Reverb" ; rdf:value 0.0
@@ -54,7 +54,10 @@
       rdfs:label "BrianMay" ; rdf:value 2.0
     ], [
       rdfs:label "EVH 5150" ; rdf:value 3.0
+    ], [
+      rdfs:label "VOX AC30 TOP BOOST Greenback" ; rdf:value 4.0
     ]
+
   ] , [
     a lv2:InputPort , lv2:ControlPort ;
     lv2:index 5 ;

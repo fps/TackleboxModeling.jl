@@ -11,6 +11,7 @@ std::vector<tacklebox::model> models =
   #include "../../../data/marshall bluesbreaker 1962/model.cc"
   #include "../../../data/BrianMay/model.cc"
   #include "../../../data/EVH 5150/model.cc"
+  #include "../../../data/VOX AC30 TOP BOOST Greenback - VOX TOPBOOST HI FULLGAIN TC 5 MAST4 - SM57/model.cc"
 };
 
 struct tacklebox_lv2
