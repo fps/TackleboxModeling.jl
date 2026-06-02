@@ -1,4 +1,4 @@
-library('tacklebox', 'tacklebox.cc', include_directories : local_includes, dependencies : [ lv2, fftw3f, samplerate ], link_with : [ fftconvolver ])
+library('tacklebox', 'tacklebox.cc', include_directories : local_includes, dependencies : [ lv2, fftw3f, samplerate ], link_with : [ fftconvolver ], link_args : [ '-static-libgcc', '-static-libstdc++', '-static'])
 # library('tacklebox', 'tacklebox.cc', include_directories : local_includes, dependencies : [ lv2 ], link_with : [ fftconvolver ])
 
 fs = import('fs')

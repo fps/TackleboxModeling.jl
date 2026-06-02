@@ -1,1 +1,1 @@
-nix-shell -p meson ninja fftwFloat lv2 pkg-config jalv libsamplerate
+nix-shell -p meson ninja fftwFloat lv2 pkg-config jalv libsamplerate glibc.static

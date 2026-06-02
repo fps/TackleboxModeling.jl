@@ -214,6 +214,7 @@ namespace tacklebox
       {
         if (samplerate != 48000.f)
         {
+#ifdef SAMPLERATE_FOUND
           std::vector<float> new_weights((int)ceilf(m.layers[index].weights.size() * samplerate/48000.f), 0.f);
           SRC_DATA src = { m.layers[index].weights.data(), new_weights.data(), (long)m.layers[index].weights.size(), (long)new_weights.size(), 0, 0, 0, samplerate/48000.f };
           if (0 != src_simple(&src, SRC_SINC_BEST_QUALITY, 1))
@@ -221,6 +222,7 @@ namespace tacklebox
             throw std::runtime_error("resampling fsiled");
           }
           m.layers[index].weights = new_weights;
+#endif
         }
 
         convolvers[index].init(blocksize, m.layers[index].weights.data(), m.layers[index].weights.size());
