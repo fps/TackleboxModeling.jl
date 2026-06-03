@@ -184,7 +184,7 @@ On some platforms (notably raspberry os) you might want to disable the use of FF
 I only tested building the plugin with mingw64 as it is shipped in cygwin as `mingw64-x86_64`. Install mingw and the `libsamplerate` for your mingw. The `lv2-dev` package can come from cygwin. Then run:
 
 ```bash
-PKG_CONFIG_PATH=/usr/x86_64-w64-mingw32/sys-root/mingw/lib/pkgconfig/ meson setup build-win --buildtype=release --cross-file windows-cross-file -Dfftw=disabled 
+PKG_CONFIG_PATH=/usr/x86_64-w64-mingw32/sys-root/mingw/lib/pkgconfig/ meson setup build-win --buildtype=release --cross-file windows-cross-file -Dfftw=disabled -Dstatic-lv2=enabled
 CPLUS_INCLUDE_PATH=/cygdrive/c/Users/fschmidt26/syncthing/uni/projects/spectral_amp_modeling/mingw-include/  meson compile -vC build-win/
 ```
 

@@ -1,4 +1,4 @@
 option('fftw', type : 'feature', value : 'enabled', description : 'Whether to enable the use of FFTW(f)')
 option('samplerate', type : 'feature', value : 'enabled', description : 'Whether to enable the use of libsamplerate')
-option('static-lv2', type : 'feature', value : 'enabled', description : 'Whether to statically link everything into the lv2 plugin')
+option('static-lv2', type : 'feature', value : 'disabled', description : 'Whether to statically link everything into the lv2 plugin')
 
