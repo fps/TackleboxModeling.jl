@@ -168,12 +168,27 @@ This code is just a proof of concept. Improvements welcome :)
 
 # Building the plugin
 
+## Linux
+
+Install `libfftw3f` and `libsamplerate` (required for resampling the IRs (weights) to a samplerate other than 48000) if you so wish.
+
 ```bash
 meson setup build -Dbuildtype=release
 meson compile -vC build
 ```
 
 On some platforms (notably raspberry os) you might want to disable the use of FFTW(f) by adding `-Dfftw=disabled` to avoid long startup times (at the price if slightly higher cpu usage.)
+
+## Windows
+
+I only tested building the plugin with mingw64 as it is shipped in cygwin as `mingw64-x86_64`. Install mingw and the `libsamplerate` for your mingw. The `lv2-dev` package can come from cygwin. Then run:
+
+```bash
+PKG_CONFIG_PATH=/usr/x86_64-w64-mingw32/sys-root/mingw/lib/pkgconfig/ meson setup build-win --buildtype=release --cross-file windows-cross-file -Dfftw=disabled 
+CPLUS_INCLUDE_PATH=/cygdrive/c/Users/fschmidt26/syncthing/uni/projects/spectral_amp_modeling/mingw-include/  meson compile -vC build-win/
+```
+
+which should give you a `build-win/plugin/lv2/libtacklebox.dll`. Change the `manifest.ttl` file to refer to the `.dll` instead of `.so` and copy the whole `build-win/plugin/lv2/tacklebox.lv2` directory to `%APPDATA%%/LV2/tacklebox.lv2` and you should be good to go.
 
 # Installing the plugin
 
