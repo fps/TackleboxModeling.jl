@@ -17,7 +17,7 @@ int main()
 
   std::cout << "Processing)...\n";
 
-  for (int index = 0; index < (10 * 750); ++index)
+  for (int index = 0; index < (1000 * 750); ++index)
   {
     t.process(in.data(), out.data(), 1.f, 1.f, 1, 0, 64);
   }
